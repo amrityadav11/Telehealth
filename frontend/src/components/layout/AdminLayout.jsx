@@ -35,7 +35,7 @@ const AdminLayout = () => {
                     <FaUserShield className="text-white text-lg" />
                 </div>
                 <div>
-                    <p className="font-bold text-white">TeleMed</p>
+                    <p className="font-bold text-white">TeleHealth</p>
                     <p className="text-xs text-gray-400">Admin Panel</p>
                 </div>
             </div>
@@ -112,7 +112,7 @@ const AdminLayout = () => {
                     >
                         <FaBars className="text-xl" />
                     </button>
-                    <span className="font-bold text-blue-600">TeleMed Admin</span>
+                    <span className="font-bold text-blue-600">TeleHealth Admin</span>
                     <button onClick={handleLogout} className="text-red-500 text-sm font-medium">
                         Logout
                     </button>

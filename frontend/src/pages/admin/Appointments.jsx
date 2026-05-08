@@ -5,6 +5,9 @@ import Spinner from '../../components/common/Spinner';
 import Pagination from '../../components/common/Pagination';
 import StatusBadge from '../../components/common/StatusBadge';
 import { format } from 'date-fns';
+import { FaDownload, FaFileExcel } from 'react-icons/fa';
+import { downloadReceiptPDF } from '../../utils/receiptPDF';
+import * as XLSX from 'xlsx';
 
 const AdminAppointments = () => {
     const [appointments, setAppointments] = useState([]);
@@ -12,6 +15,7 @@ const AdminAppointments = () => {
     const [filter, setFilter] = useState({ status: '', page: 1 });
     const [total, setTotal] = useState(0);
     const [pages, setPages] = useState(0);
+    const [exporting, setExporting] = useState(false);
 
     const fetchAppointments = async () => {
         setLoading(true);
@@ -31,13 +35,55 @@ const AdminAppointments = () => {
 
     useEffect(() => { fetchAppointments(); }, [filter]);
 
+    const handleExportAppointments = async () => {
+        setExporting(true);
+        try {
+            const { data } = await api.get('/admin/appointments', { params: { limit: 10000 } });
+            const rows = [
+                ['Appointment ID', 'Patient', 'Patient Email', 'Doctor', 'Date', 'Time', 'Type', 'Status', 'Payment Status', 'Amount', 'Transaction ID'],
+                ...data.appointments.map((a) => [
+                    a.appointmentId || '—',
+                    a.patient?.name || '—',
+                    a.patient?.email || '—',
+                    a.doctor?.user?.name || '—',
+                    a.appointmentDate ? new Date(a.appointmentDate).toLocaleDateString('en-IN') : '—',
+                    a.timeSlot?.startTime || '—',
+                    a.type || '—',
+                    a.status || '—',
+                    a.payment?.status || '—',
+                    a.payment?.amount || 0,
+                    a.payment?.transactionId || '—',
+                ]),
+            ];
+            const ws = XLSX.utils.aoa_to_sheet(rows);
+            ws['!cols'] = rows[0].map((h) => ({ wch: Math.max(h.length + 4, 14) }));
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Appointments');
+            XLSX.writeFile(wb, `telehealth-appointments-${new Date().toISOString().slice(0, 10)}.xlsx`);
+            toast.success('Appointments exported to Excel');
+        } catch (err) {
+            toast.error('Export failed');
+        } finally {
+            setExporting(false);
+        }
+    };
+
     const statuses = ['', 'pending', 'confirmed', 'completed', 'cancelled'];
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-8">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-900">All Appointments</h1>
-                <span className="text-gray-500 text-sm">{total} total</span>
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900">All Appointments</h1>
+                    <span className="text-gray-500 text-sm">{total} total</span>
+                </div>
+                <button
+                    onClick={handleExportAppointments}
+                    disabled={exporting}
+                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors disabled:opacity-60"
+                >
+                    <FaFileExcel /> {exporting ? 'Exporting...' : 'Export Excel'}
+                </button>
             </div>
 
             {/* Status Filter */}
@@ -67,7 +113,9 @@ const AdminAppointments = () => {
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Doctor</th>
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Date & Time</th>
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Amount</th>
+                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Payment</th>
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Receipt</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
@@ -85,8 +133,29 @@ const AdminAppointments = () => {
                                             <p className="text-sm text-gray-800">{format(new Date(appt.appointmentDate), 'MMM d, yyyy')}</p>
                                             <p className="text-xs text-gray-500">{appt.timeSlot?.startTime}</p>
                                         </td>
-                                        <td className="px-6 py-4 text-sm font-medium text-gray-900">${appt.payment?.amount}</td>
+                                        <td className="px-6 py-4 text-sm font-medium text-gray-900">₹{appt.payment?.amount}</td>
+                                        <td className="px-6 py-4">
+                                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${appt.payment?.status === 'paid'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : appt.payment?.status === 'refunded'
+                                                        ? 'bg-purple-100 text-purple-700'
+                                                        : 'bg-yellow-100 text-yellow-700'
+                                                }`}>
+                                                {appt.payment?.status || 'pending'}
+                                            </span>
+                                        </td>
                                         <td className="px-6 py-4"><StatusBadge status={appt.status} /></td>
+                                        <td className="px-6 py-4">
+                                            {appt.payment?.status === 'paid' && (
+                                                <button
+                                                    onClick={() => downloadReceiptPDF(appt)}
+                                                    className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium border border-blue-200 hover:border-blue-400 px-2 py-1 rounded-lg transition-colors"
+                                                    title="Download Receipt"
+                                                >
+                                                    <FaDownload /> PDF
+                                                </button>
+                                            )}
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>

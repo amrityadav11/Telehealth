@@ -32,7 +32,7 @@ const seedData = async () => {
     // ── Admin ──────────────────────────────────────────────────────────────
     await User.create({
         name: 'Admin User',
-        email: 'admin@telemed.com',
+        email: 'admin@telehealth.com',
         password: 'Admin@123',
         role: 'admin',
         isEmailVerified: true,
@@ -44,7 +44,7 @@ const seedData = async () => {
     const doctorUsersRaw = [
         {
             name: 'Dr. Sarah Johnson',
-            email: 'sarah@telemed.com',
+            email: 'sarah@telehealth.com',
             password: await bcrypt.hash('Doctor@123', 12),
             role: 'doctor',
             phone: '+1-555-0101',
@@ -53,7 +53,7 @@ const seedData = async () => {
         },
         {
             name: 'Dr. Michael Chen',
-            email: 'michael@telemed.com',
+            email: 'michael@telehealth.com',
             password: await bcrypt.hash('Doctor@123', 12),
             role: 'doctor',
             phone: '+1-555-0102',
@@ -62,7 +62,7 @@ const seedData = async () => {
         },
         {
             name: 'Dr. Emily Rodriguez',
-            email: 'emily@telemed.com',
+            email: 'emily@telehealth.com',
             password: await bcrypt.hash('Doctor@123', 12),
             role: 'doctor',
             phone: '+1-555-0103',
@@ -71,7 +71,7 @@ const seedData = async () => {
         },
         {
             name: 'Dr. James Wilson',
-            email: 'james@telemed.com',
+            email: 'james@telehealth.com',
             password: await bcrypt.hash('Doctor@123', 12),
             role: 'doctor',
             phone: '+1-555-0104',
@@ -217,11 +217,11 @@ const seedData = async () => {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('📋 TEST CREDENTIALS');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('Admin:    admin@telemed.com   / Admin@123');
-    console.log('Doctor 1: sarah@telemed.com   / Doctor@123');
-    console.log('Doctor 2: michael@telemed.com / Doctor@123');
-    console.log('Doctor 3: emily@telemed.com   / Doctor@123');
-    console.log('Doctor 4: james@telemed.com   / Doctor@123');
+    console.log('Admin:    admin@telehealth.com   / Admin@123');
+    console.log('Doctor 1: sarah@telehealth.com   / Doctor@123');
+    console.log('Doctor 2: michael@telehealth.com / Doctor@123');
+    console.log('Doctor 3: emily@telehealth.com   / Doctor@123');
+    console.log('Doctor 4: james@telehealth.com   / Doctor@123');
     console.log('Patient:  john@example.com    / Patient@123');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 

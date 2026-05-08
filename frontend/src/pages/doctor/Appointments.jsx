@@ -5,8 +5,9 @@ import { fetchDoctorAppointments, updateAppointmentStatus } from '../../store/sl
 import StatusBadge from '../../components/common/StatusBadge';
 import Pagination from '../../components/common/Pagination';
 import Spinner from '../../components/common/Spinner';
+import ChatModal from '../../components/chat/ChatModal';
 import { format } from 'date-fns';
-import { FaCheck, FaTimes, FaVideo, FaPlay, FaStop } from 'react-icons/fa';
+import { FaCheck, FaTimes, FaVideo, FaPlay, FaStop, FaComments } from 'react-icons/fa';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -16,6 +17,7 @@ const DoctorAppointments = () => {
     const [statusFilter, setStatusFilter] = useState('');
     const [prescriptionModal, setPrescriptionModal] = useState(null);
     const [prescription, setPrescription] = useState({ medicines: [], instructions: '' });
+    const [chatAppointment, setChatAppointment] = useState(null);
 
     useEffect(() => {
         dispatch(fetchDoctorAppointments({ status: statusFilter, page: 1 }));
@@ -133,6 +135,16 @@ const DoctorAppointments = () => {
                                         >
                                             <FaVideo className="text-xs" /> Join
                                         </Link>
+                                    )}
+
+                                    {/* Chat button */}
+                                    {['pending', 'confirmed', 'completed'].includes(appt.status) && (
+                                        <button
+                                            onClick={() => setChatAppointment(appt)}
+                                            className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 font-medium border border-blue-200 hover:border-blue-400 px-2.5 py-1.5 rounded-lg transition-colors"
+                                        >
+                                            <FaComments className="text-xs" /> Chat
+                                        </button>
                                     )}
                                 </div>
                             </div>
@@ -266,6 +278,14 @@ const DoctorAppointments = () => {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Chat Modal */}
+            {chatAppointment && (
+                <ChatModal
+                    appointment={chatAppointment}
+                    onClose={() => setChatAppointment(null)}
+                />
             )}
         </div>
     );

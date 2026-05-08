@@ -13,10 +13,10 @@ const createTransporter = () => {
 
 const templates = {
   emailVerification: ({ name, verifyUrl }) => ({
-    subject: 'Verify Your Email - TeleMed',
+    subject: 'Verify Your Email - TeleHealth',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2563eb;">Welcome to TeleMed, ${name}!</h2>
+        <h2 style="color: #2563eb;">Welcome to TeleHealth, ${name}!</h2>
         <p>Please verify your email address by clicking the button below:</p>
         <a href="${verifyUrl}" style="background:#2563eb;color:#fff;padding:12px 24px;text-decoration:none;border-radius:6px;display:inline-block;margin:16px 0;">
           Verify Email
@@ -28,7 +28,7 @@ const templates = {
   }),
 
   passwordReset: ({ name, resetUrl }) => ({
-    subject: 'Password Reset Request - TeleMed',
+    subject: 'Password Reset Request - TeleHealth',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #2563eb;">Password Reset</h2>
@@ -61,7 +61,7 @@ const templates = {
   }),
 
   doctorApproval: ({ name, isApproved, rejectionReason }) => ({
-    subject: isApproved ? 'Profile Approved - TeleMed' : 'Profile Update Required - TeleMed',
+    subject: isApproved ? 'Profile Approved - TeleHealth' : 'Profile Update Required - TeleHealth',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: ${isApproved ? '#16a34a' : '#dc2626'};">
@@ -77,7 +77,7 @@ const templates = {
   }),
 
   appointmentReminder: ({ patientName, doctorName, date, time, appointmentId, hoursUntil }) => ({
-    subject: `Reminder: Appointment in ${hoursUntil} hour${hoursUntil > 1 ? 's' : ''} - TeleMed`,
+    subject: `Reminder: Appointment in ${hoursUntil} hour${hoursUntil > 1 ? 's' : ''} - TeleHealth`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;">
         <div style="background: #2563eb; padding: 24px; text-align: center;">
@@ -99,7 +99,7 @@ const templates = {
   }),
 
   appointmentCancellation: ({ recipientName, patientName, doctorName, date, time, cancelledBy, reason }) => ({
-    subject: 'Appointment Cancelled - TeleMed',
+    subject: 'Appointment Cancelled - TeleHealth',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;">
         <div style="background: #dc2626; padding: 24px; text-align: center;">
@@ -122,7 +122,7 @@ const templates = {
   }),
 
   appointmentRescheduled: ({ doctorName, patientName, oldDate, newDate, newTime }) => ({
-    subject: 'Appointment Rescheduled - TeleMed',
+    subject: 'Appointment Rescheduled - TeleHealth',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;">
         <div style="background: #7c3aed; padding: 24px; text-align: center;">
@@ -142,7 +142,7 @@ const templates = {
   }),
 
   paymentReceipt: ({ patientName, doctorName, date, time, amount, transactionId, appointmentId }) => ({
-    subject: `Payment Receipt - ${appointmentId} - TeleMed`,
+    subject: `Payment Receipt - ${appointmentId} - TeleHealth`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;">
         <div style="background: #16a34a; padding: 24px; text-align: center;">
@@ -166,7 +166,7 @@ const templates = {
   }),
 
   reviewRequest: ({ patientName, doctorName, appointmentId }) => ({
-    subject: 'How was your consultation? - TeleMed',
+    subject: 'How was your consultation? - TeleHealth',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;">
         <div style="background: #f59e0b; padding: 24px; text-align: center;">
@@ -199,7 +199,7 @@ const sendEmail = async ({ email, subject, template, data, html }) => {
   }
 
   const mailOptions = {
-    from: `"${process.env.FROM_NAME || 'TeleMed'}" <${process.env.FROM_EMAIL}>`,
+    from: `"${process.env.FROM_NAME || 'TeleHealth'}" <${process.env.FROM_EMAIL}>`,
     to: email,
     subject: emailSubject,
     html: emailHtml,

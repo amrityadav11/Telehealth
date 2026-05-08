@@ -32,7 +32,7 @@ const DoctorLayout = () => {
                     <FaUserMd className="text-white" />
                 </div>
                 <div>
-                    <p className="font-bold text-gray-900 text-sm">TeleMed</p>
+                    <p className="font-bold text-gray-900 text-sm">TeleHealth</p>
                     <p className="text-xs text-gray-500">Doctor Portal</p>
                 </div>
             </div>

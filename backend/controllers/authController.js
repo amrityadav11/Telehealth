@@ -56,12 +56,11 @@ const register = asyncHandler(async (req, res) => {
         });
     }
 
-    // Try to send verification email — never block registration if it fails
+    // Try to send welcome email — never block registration if it fails
     if (
         process.env.SMTP_HOST &&
         process.env.SMTP_EMAIL &&
-        process.env.SMTP_PASSWORD &&
-        process.env.SMTP_HOST !== 'smtp.gmail.com' // skip if still placeholder
+        process.env.SMTP_PASSWORD
     ) {
         try {
             const { sendEmail } = require('../utils/sendEmail');
@@ -70,7 +69,7 @@ const register = asyncHandler(async (req, res) => {
             const verifyUrl = `${process.env.CLIENT_URL}/verify-email/${verifyToken}`;
             await sendEmail({
                 email: user.email,
-                subject: 'Welcome to TeleMed - Verify Your Email',
+                subject: 'Welcome to TeleHealth - Verify Your Email',
                 template: 'emailVerification',
                 data: { name: user.name, verifyUrl },
             });
@@ -172,7 +171,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
         const { sendEmail } = require('../utils/sendEmail');
         await sendEmail({
             email: user.email,
-            subject: 'TeleMed - Password Reset Request',
+            subject: 'TeleHealth - Password Reset Request',
             template: 'passwordReset',
             data: { name: user.name, resetUrl },
         });

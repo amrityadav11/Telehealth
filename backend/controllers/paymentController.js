@@ -15,7 +15,7 @@ try {
 // @route   POST /api/payments/create-intent
 // @access  Private (Patient)
 const createPaymentIntent = asyncHandler(async (req, res) => {
-    const { appointmentId } = req.body;
+    const { appointmentId, method, upiId, bank } = req.body;
 
     const appointment = await Appointment.findById(appointmentId).populate({
         path: 'doctor',
@@ -37,8 +37,48 @@ const createPaymentIntent = asyncHandler(async (req, res) => {
         throw new Error('Appointment already paid');
     }
 
+    // ── UPI / Net Banking (simulated) ──────────────────────────────
+    if (method === 'upi' || method === 'netbanking') {
+        appointment.payment.status = 'paid';
+        appointment.payment.method = method;
+        appointment.payment.transactionId = `${method.toUpperCase()}_${Date.now()}_${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+        appointment.payment.paidAt = new Date();
+        await appointment.save();
+
+        // Send receipt email
+        try {
+            const { sendEmail } = require('../utils/sendEmail');
+            const populatedAppt = await appointment.populate([
+                { path: 'patient', select: 'name email' },
+                { path: 'doctor', populate: { path: 'user', select: 'name' } },
+            ]);
+            await sendEmail({
+                email: populatedAppt.patient.email,
+                template: 'paymentReceipt',
+                data: {
+                    patientName: populatedAppt.patient.name,
+                    doctorName: populatedAppt.doctor.user.name,
+                    date: populatedAppt.appointmentDate.toDateString(),
+                    time: populatedAppt.timeSlot.startTime,
+                    amount: populatedAppt.payment.amount,
+                    transactionId: populatedAppt.payment.transactionId,
+                    appointmentId: populatedAppt.appointmentId,
+                },
+            });
+        } catch (err) {
+            console.error('Receipt email error:', err.message);
+        }
+
+        return res.json({
+            success: true,
+            mock: true,
+            message: `${method === 'upi' ? 'UPI' : 'Net Banking'} payment processed successfully`,
+            appointment,
+        });
+    }
+
+    // ── Mock payment (no Stripe key) ───────────────────────────────
     if (!stripe) {
-        // Mock payment for development
         appointment.payment.status = 'paid';
         appointment.payment.method = 'mock';
         appointment.payment.transactionId = `mock_${Date.now()}`;
@@ -53,7 +93,7 @@ const createPaymentIntent = asyncHandler(async (req, res) => {
         });
     }
 
-    // Real Stripe payment
+    // ── Real Stripe payment ────────────────────────────────────────
     const paymentIntent = await stripe.paymentIntents.create({
         amount: Math.round(appointment.payment.amount * 100), // cents
         currency: 'usd',

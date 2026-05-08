@@ -455,7 +455,7 @@ const rescheduleAppointment = asyncHandler(async (req, res) => {
   try {
     await sendEmail({
       email: appointment.doctor.user.email,
-      subject: 'Appointment Rescheduled - TeleMed',
+      subject: 'Appointment Rescheduled - TeleHealth',
       template: 'appointmentRescheduled',
       data: {
         doctorName: appointment.doctor.user.name,

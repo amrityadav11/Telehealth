@@ -4,8 +4,9 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 import Spinner from '../../components/common/Spinner';
 import Pagination from '../../components/common/Pagination';
-import { FaSearch, FaToggleOn, FaToggleOff, FaUserShield, FaPlus } from 'react-icons/fa';
+import { FaSearch, FaToggleOn, FaToggleOff, FaUserShield, FaPlus, FaFileExcel } from 'react-icons/fa';
 import { format } from 'date-fns';
+import { exportUsersExcel, exportPatientsExcel } from '../../utils/exportExcel';
 
 const roleBadge = {
     admin: 'bg-purple-100 text-purple-800',
@@ -20,6 +21,7 @@ const AdminUsers = () => {
     const [total, setTotal] = useState(0);
     const [pages, setPages] = useState(0);
     const [roleModal, setRoleModal] = useState(null); // user to change role
+    const [exporting, setExporting] = useState(false);
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -65,6 +67,25 @@ const AdminUsers = () => {
         }
     };
 
+    const handleExportAll = async (type) => {
+        setExporting(true);
+        try {
+            // Fetch all users (no pagination limit)
+            const { data } = await api.get('/admin/users', { params: { limit: 10000 } });
+            if (type === 'patients') {
+                exportPatientsExcel(data.users);
+                toast.success('Patients exported to Excel');
+            } else {
+                exportUsersExcel(data.users);
+                toast.success('All users exported to Excel');
+            }
+        } catch (err) {
+            toast.error('Export failed');
+        } finally {
+            setExporting(false);
+        }
+    };
+
     return (
         <div className="max-w-7xl mx-auto px-4 py-8">
             {/* Header */}
@@ -73,12 +94,30 @@ const AdminUsers = () => {
                     <h1 className="text-2xl font-bold text-gray-900">Manage Users</h1>
                     <p className="text-gray-500 text-sm mt-1">{total} total accounts</p>
                 </div>
-                <Link
-                    to="/admin/create-admin"
-                    className="flex items-center gap-2 btn-primary text-sm whitespace-nowrap"
-                >
-                    <FaPlus /> Create Admin
-                </Link>
+                <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                        onClick={() => handleExportAll('patients')}
+                        disabled={exporting}
+                        className="flex items-center gap-2 text-sm bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg font-medium transition-colors disabled:opacity-60"
+                        title="Export patients to Excel"
+                    >
+                        <FaFileExcel /> {exporting ? 'Exporting...' : 'Export Patients'}
+                    </button>
+                    <button
+                        onClick={() => handleExportAll('all')}
+                        disabled={exporting}
+                        className="flex items-center gap-2 text-sm bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg font-medium transition-colors disabled:opacity-60"
+                        title="Export all users to Excel"
+                    >
+                        <FaFileExcel /> {exporting ? 'Exporting...' : 'Export All Users'}
+                    </button>
+                    <Link
+                        to="/admin/create-admin"
+                        className="flex items-center gap-2 btn-primary text-sm whitespace-nowrap"
+                    >
+                        <FaPlus /> Create Admin
+                    </Link>
+                </div>
             </div>
 
             {/* Filters */}
@@ -183,8 +222,8 @@ const AdminUsers = () => {
                                                     <button
                                                         onClick={() => handleToggleStatus(user._id)}
                                                         className={`flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg font-medium transition-colors ${user.isActive
-                                                                ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                                                                : 'bg-green-100 text-green-700 hover:bg-green-200'
+                                                            ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                                                            : 'bg-green-100 text-green-700 hover:bg-green-200'
                                                             }`}
                                                     >
                                                         {user.isActive
@@ -233,8 +272,8 @@ const AdminUsers = () => {
                                     onClick={() => handleRoleChange(roleModal._id, role)}
                                     disabled={roleModal.role === role}
                                     className={`w-full flex items-center justify-between p-3 rounded-xl border-2 text-left transition-all ${roleModal.role === role
-                                            ? 'border-blue-500 bg-blue-50 cursor-default'
-                                            : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+                                        ? 'border-blue-500 bg-blue-50 cursor-default'
+                                        : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
                                         }`}
                                 >
                                     <div>

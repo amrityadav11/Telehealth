@@ -33,7 +33,7 @@ const PatientLayout = () => {
                     <span className="text-white font-bold text-sm">TM</span>
                 </div>
                 <div>
-                    <p className="font-bold text-gray-900 text-sm">TeleMed</p>
+                    <p className="font-bold text-gray-900 text-sm">TeleHealth</p>
                     <p className="text-xs text-gray-500">Patient Portal</p>
                 </div>
             </div>

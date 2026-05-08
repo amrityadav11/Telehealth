@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
     createAdmin,
+    createDoctor,
     changeUserRole,
     getDashboardStats,
     getAllUsers,
@@ -19,6 +20,7 @@ router.use(protect, authorize('admin'));
 router.get('/stats', getDashboardStats);
 router.get('/users', getAllUsers);
 router.get('/doctors', getAllDoctors);
+router.post('/doctors', createDoctor);          // Admin creates doctor directly
 router.get('/appointments', getAllAppointments);
 
 router.post('/create-admin', createAdmin);          // NEW

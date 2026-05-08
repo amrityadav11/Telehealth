@@ -1,7 +1,7 @@
 {
-  "name": "telemedicine-backend",
+  "name": "telehealth-backend",
   "version": "1.0.0",
-  "description": "Doctor Appointment & Telemedicine Backend API",
+  "description": "Doctor Appointment & Telehealth Backend API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

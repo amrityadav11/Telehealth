@@ -7,10 +7,12 @@ import Pagination from '../../components/common/Pagination';
 import Spinner from '../../components/common/Spinner';
 import PaymentModal from '../../components/payment/PaymentModal';
 import RescheduleModal from '../../components/appointments/RescheduleModal';
+import ChatModal from '../../components/chat/ChatModal';
 import { format } from 'date-fns';
-import { FaVideo, FaTimes, FaStar, FaCreditCard, FaCalendarAlt } from 'react-icons/fa';
+import { FaVideo, FaTimes, FaStar, FaCreditCard, FaCalendarAlt, FaComments, FaDownload } from 'react-icons/fa';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import { downloadReceiptPDF } from '../../utils/receiptPDF';
 
 const PatientAppointments = () => {
     const dispatch = useDispatch();
@@ -20,6 +22,7 @@ const PatientAppointments = () => {
     const [reviewData, setReviewData] = useState({ rating: 5, comment: '' });
     const [paymentAppointment, setPaymentAppointment] = useState(null);
     const [rescheduleAppointment, setRescheduleAppointment] = useState(null);
+    const [chatAppointment, setChatAppointment] = useState(null);
 
     useEffect(() => {
         dispatch(fetchMyAppointments({ status: statusFilter, page: 1 }));
@@ -132,6 +135,27 @@ const PatientAppointments = () => {
                                         </Link>
                                     )}
 
+                                    {/* Chat button — available for pending/confirmed/completed */}
+                                    {['pending', 'confirmed', 'completed'].includes(appt.status) && (
+                                        <button
+                                            onClick={() => setChatAppointment(appt)}
+                                            className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 font-medium border border-blue-200 hover:border-blue-400 px-2.5 py-1.5 rounded-lg transition-colors"
+                                        >
+                                            <FaComments className="text-xs" /> Chat
+                                        </button>
+                                    )}
+
+                                    {/* Download Receipt — shown when payment is paid */}
+                                    {appt.payment?.status === 'paid' && (
+                                        <button
+                                            onClick={() => downloadReceiptPDF(appt)}
+                                            className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 font-medium border border-blue-200 hover:border-blue-400 px-2.5 py-1.5 rounded-lg transition-colors"
+                                            title="Download Receipt"
+                                        >
+                                            <FaDownload className="text-xs" /> Receipt
+                                        </button>
+                                    )}
+
                                     {appt.status === 'completed' && (
                                         <button
                                             onClick={() => setReviewModal(appt)}
@@ -206,6 +230,14 @@ const PatientAppointments = () => {
                     appointment={rescheduleAppointment}
                     onSuccess={handleRescheduleSuccess}
                     onClose={() => setRescheduleAppointment(null)}
+                />
+            )}
+
+            {/* Chat Modal */}
+            {chatAppointment && (
+                <ChatModal
+                    appointment={chatAppointment}
+                    onClose={() => setChatAppointment(null)}
                 />
             )}
 

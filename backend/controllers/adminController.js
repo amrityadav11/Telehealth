@@ -260,7 +260,7 @@ const updateDoctorApproval = asyncHandler(async (req, res) => {
         const { sendEmail } = require('../utils/sendEmail');
         await sendEmail({
             email: doctor.user.email,
-            subject: isApproved ? 'Profile Approved - TeleMed' : 'Profile Update Required - TeleMed',
+            subject: isApproved ? 'Profile Approved - TeleHealth' : 'Profile Update Required - TeleHealth',
             template: 'doctorApproval',
             data: { name: doctor.user.name, isApproved, rejectionReason },
         });
@@ -339,8 +339,64 @@ const deleteReview = asyncHandler(async (req, res) => {
     res.json({ success: true, message: 'Review removed' });
 });
 
+// @desc    Admin creates a doctor directly (auto-approved)
+// @route   POST /api/admin/doctors
+// @access  Private (Admin)
+const createDoctor = asyncHandler(async (req, res) => {
+    const {
+        name, email, password, phone,
+        specialization, category, experience,
+        consultationFee, bio, licenseNumber,
+    } = req.body;
+
+    if (!name || !email || !password || !specialization || !category || !licenseNumber) {
+        res.status(400);
+        throw new Error('Name, email, password, specialization, category, and license number are required');
+    }
+
+    const existing = await User.findOne({ email: email.toLowerCase() });
+    if (existing) {
+        res.status(400);
+        throw new Error('An account with this email already exists');
+    }
+
+    // Create user account with doctor role
+    const user = await User.create({
+        name: name.trim(),
+        email: email.toLowerCase().trim(),
+        password,
+        role: 'doctor',
+        phone: phone || undefined,
+        isEmailVerified: true,
+        isActive: true,
+    });
+
+    // Create doctor profile — auto-approved since admin is creating it
+    const doctor = await Doctor.create({
+        user: user._id,
+        specialization: specialization.trim(),
+        category,
+        experience: Number(experience) || 0,
+        consultationFee: Number(consultationFee) || 0,
+        bio: bio || '',
+        licenseNumber: licenseNumber.trim(),
+        isApproved: true,
+        approvedAt: new Date(),
+        approvedBy: req.user._id,
+    });
+
+    const populated = await Doctor.findById(doctor._id).populate('user', 'name email phone');
+
+    res.status(201).json({
+        success: true,
+        message: 'Doctor created and approved successfully',
+        doctor: populated,
+    });
+});
+
 module.exports = {
     createAdmin,
+    createDoctor,
     changeUserRole,
     getDashboardStats,
     getAllUsers,

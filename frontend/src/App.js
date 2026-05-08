@@ -46,6 +46,11 @@ import MedicalHistory from './pages/patient/MedicalHistory';
 // Consultation
 import ConsultationRoom from './pages/consultation/ConsultationRoom';
 
+// AI Symptom Checker
+import SymptomChecker from './components/ai/SymptomChecker';
+import AuthCallback from './pages/auth/AuthCallback';
+import SymptomCheckerPage from './pages/ai/SymptomCheckerPage';
+
 // Smart redirect based on role
 const RoleRedirect = () => {
     const { user } = useSelector((s) => s.auth);
@@ -74,7 +79,7 @@ function App() {
                     dispatch(addNotification({ message: d.message, type, isRead: false, createdAt: new Date() }));
                     // Browser notification if permission granted
                     if (Notification.permission === 'granted') {
-                        new Notification('TeleMed', { body: d.message, icon: '/favicon.ico' });
+                        new Notification('TeleHealth', { body: d.message, icon: '/favicon.ico' });
                     }
                 };
 
@@ -117,6 +122,8 @@ function App() {
                 <Route path="/reset-password/:token" element={<WithNavbar><ResetPassword /></WithNavbar>} />
                 <Route path="/doctors" element={<WithNavbar><DoctorList /></WithNavbar>} />
                 <Route path="/doctors/:id" element={<WithNavbar><DoctorProfile /></WithNavbar>} />
+                <Route path="/symptom-checker" element={<WithNavbar><SymptomCheckerPage /></WithNavbar>} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
 
                 {/* Smart redirect */}
                 <Route path="/dashboard" element={<RoleRedirect />} />
@@ -169,6 +176,9 @@ function App() {
                 {/* Catch-all */}
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
+
+            {/* AI Symptom Checker — floating widget on all pages */}
+            <SymptomChecker />
         </Router>
     );
 }

@@ -1,5 +1,5 @@
 {
-    "name": "telemedicine-frontend",
+    "name": "telehealth-frontend",
     "version": "1.0.0",
     "private": true,
     "dependencies": {
@@ -8,6 +8,8 @@
         "@stripe/stripe-js": "^3.0.0",
         "axios": "^1.6.2",
         "date-fns": "^3.0.6",
+        "jspdf": "^4.2.1",
+        "jspdf-autotable": "^5.0.7",
         "react": "^18.2.0",
         "react-datepicker": "^4.25.0",
         "react-dom": "^18.2.0",
@@ -17,7 +19,8 @@
         "react-router-dom": "^6.21.1",
         "react-scripts": "5.0.1",
         "recharts": "^2.10.3",
-        "socket.io-client": "^4.6.2"
+        "socket.io-client": "^4.6.2",
+        "xlsx": "^0.18.5"
     },
     "scripts": {
         "start": "react-scripts start",

@@ -50,7 +50,7 @@ const Register = () => {
                         <FaUserMd className="text-white text-3xl" />
                     </div>
                     <h1 className="text-2xl font-bold text-gray-900">Create your account</h1>
-                    <p className="text-gray-600 mt-1">Join TeleMed today</p>
+                    <p className="text-gray-600 mt-1">Join TeleHealth today</p>
                 </div>
 
                 <div className="card">
@@ -62,8 +62,8 @@ const Register = () => {
                                 type="button"
                                 onClick={() => setFormData({ ...formData, role })}
                                 className={`flex-1 py-2 rounded-lg text-sm font-medium capitalize transition-all ${formData.role === role
-                                        ? 'bg-white text-blue-600 shadow-sm'
-                                        : 'text-gray-600 hover:text-gray-800'
+                                    ? 'bg-white text-blue-600 shadow-sm'
+                                    : 'text-gray-600 hover:text-gray-800'
                                     }`}
                             >
                                 {role === 'doctor' ? '👨‍⚕️ Doctor' : '🧑 Patient'}

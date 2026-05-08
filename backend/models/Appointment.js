@@ -65,7 +65,7 @@ const appointmentSchema = new mongoose.Schema(
             },
             method: {
                 type: String,
-                enum: ['stripe', 'mock', 'cash'],
+                enum: ['stripe', 'upi', 'netbanking', 'mock', 'cash'],
                 default: 'mock',
             },
             transactionId: String,

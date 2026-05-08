@@ -10,6 +10,7 @@ const {
     verifyEmail,
     updateProfile,
 } = require('../controllers/authController');
+const { sendOTP, verifyOTP } = require('../controllers/otpController');
 const { protect } = require('../middleware/authMiddleware');
 const { registerValidator, loginValidator } = require('../middleware/validationMiddleware');
 
@@ -33,5 +34,9 @@ router.get('/verify-email/:token', verifyEmail);
 router.put('/update-profile', protect, (req, res, next) => {
     getUpload().single('avatar')(req, res, next);
 }, updateProfile);
+
+// ── Phone OTP routes ──────────────────────────────────────────────────────
+router.post('/send-otp', sendOTP);
+router.post('/verify-otp', verifyOTP);
 
 module.exports = router;

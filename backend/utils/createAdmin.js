@@ -1,7 +1,7 @@
 /**
  * CLI script to create an admin user
  * Usage: node utils/createAdmin.js
- *        node utils/createAdmin.js --email=admin2@telemed.com --name="Super Admin" --password=Admin@456
+ *        node utils/createAdmin.js --email=admin2@telehealth.com --name="Super Admin" --password=Admin@456
  */
 
 const path = require('path');

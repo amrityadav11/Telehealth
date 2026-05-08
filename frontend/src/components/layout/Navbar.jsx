@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
 import { fetchNotifications, markAllRead } from '../../store/slices/notificationSlice';
-import { FaBell, FaUserMd, FaBars, FaTimes, FaSignOutAlt, FaTachometerAlt, FaMoon, FaSun } from 'react-icons/fa';
+import { FaBell, FaUserMd, FaBars, FaTimes, FaSignOutAlt, FaTachometerAlt, FaMoon, FaSun, FaStethoscope } from 'react-icons/fa';
 import useDarkMode from '../../hooks/useDarkMode';
 
 const Navbar = () => {
@@ -52,13 +52,16 @@ const Navbar = () => {
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-2">
                         <FaUserMd className="text-blue-600 text-2xl" />
-                        <span className="text-xl font-bold text-blue-600">TeleMed</span>
+                        <span className="text-xl font-bold text-blue-600">TeleHealth</span>
                     </Link>
 
                     {/* Desktop Nav */}
                     <div className="hidden md:flex items-center gap-6">
                         <Link to="/doctors" className="text-gray-600 hover:text-blue-600 font-medium transition-colors">
                             Find Doctors
+                        </Link>
+                        <Link to="/symptom-checker" className="flex items-center gap-1.5 text-gray-600 hover:text-blue-600 font-medium transition-colors">
+                            <FaStethoscope className="text-sm text-blue-500" /> AI Checker
                         </Link>
 
                         {user ? (
@@ -183,6 +186,9 @@ const Navbar = () => {
                     <div className="md:hidden py-4 border-t border-gray-100 space-y-2">
                         <Link to="/doctors" className="block px-2 py-2 text-gray-600 hover:text-blue-600 rounded-lg" onClick={() => setMenuOpen(false)}>
                             Find Doctors
+                        </Link>
+                        <Link to="/symptom-checker" className="block px-2 py-2 text-gray-600 hover:text-blue-600 rounded-lg" onClick={() => setMenuOpen(false)}>
+                            🩺 AI Symptom Checker
                         </Link>
                         {user ? (
                             <>

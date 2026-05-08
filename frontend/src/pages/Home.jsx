@@ -42,6 +42,12 @@ const Home = () => {
                             Find a Doctor
                         </Link>
                         <Link
+                            to="/symptom-checker"
+                            className="bg-green-400 text-gray-900 font-semibold py-3 px-8 rounded-xl hover:bg-green-300 transition-colors text-lg flex items-center justify-center gap-2"
+                        >
+                            🩺 AI Symptom Checker
+                        </Link>
+                        <Link
                             to="/register"
                             className="bg-yellow-400 text-gray-900 font-semibold py-3 px-8 rounded-xl hover:bg-yellow-300 transition-colors text-lg"
                         >
@@ -69,7 +75,7 @@ const Home = () => {
             <section className="py-16 px-4 bg-gray-50">
                 <div className="max-w-6xl mx-auto">
                     <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-                        Why Choose TeleMed?
+                        Why Choose TeleHealth?
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         {features.map(({ icon: Icon, title, desc }) => (
@@ -136,7 +142,7 @@ const Home = () => {
             {/* CTA */}
             <section className="py-16 px-4 bg-blue-600 text-white text-center">
                 <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
-                <p className="text-blue-100 mb-8 text-lg">Join thousands of patients who trust TeleMed for their healthcare needs.</p>
+                <p className="text-blue-100 mb-8 text-lg">Join thousands of patients who trust TeleHealth for their healthcare needs.</p>
                 <Link to="/register" className="bg-white text-blue-600 font-semibold py-3 px-8 rounded-xl hover:bg-blue-50 transition-colors text-lg inline-block">
                     Create Free Account
                 </Link>
@@ -144,7 +150,7 @@ const Home = () => {
 
             {/* Footer */}
             <footer className="bg-gray-900 text-gray-400 py-8 px-4 text-center">
-                <p>&copy; {new Date().getFullYear()} TeleMed. All rights reserved.</p>
+                <p>&copy; {new Date().getFullYear()} TeleHealth. All rights reserved.</p>
             </footer>
         </div>
     );
