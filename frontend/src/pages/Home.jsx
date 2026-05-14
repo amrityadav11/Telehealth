@@ -1,156 +1,452 @@
-import React from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaUserMd, FaVideo, FaCalendarCheck, FaShieldAlt, FaStar, FaClock } from 'react-icons/fa';
+import {
+    FaUserMd, FaVideo, FaCalendarCheck, FaShieldAlt, FaStar, FaClock,
+    FaLock, FaHeartbeat, FaAward, FaComments, FaMobileAlt, FaFileAlt,
+    FaCheckCircle, FaArrowRight, FaQuoteLeft,
+} from 'react-icons/fa';
 
-const features = [
-    { icon: FaUserMd, title: 'Expert Doctors', desc: 'Board-certified specialists across 15+ medical categories.' },
-    { icon: FaVideo, title: 'Video Consultations', desc: 'HD video calls with real-time chat from anywhere.' },
-    { icon: FaCalendarCheck, title: 'Easy Scheduling', desc: 'Book appointments in seconds with instant confirmation.' },
-    { icon: FaShieldAlt, title: 'Secure & Private', desc: 'HIPAA-compliant platform with end-to-end encryption.' },
+const FEATURES = [
+    {
+        icon: FaUserMd,
+        title: 'Expert Doctors',
+        desc: 'Board-certified specialists across 15+ medical categories, all verified and approved.',
+        color: 'bg-blue-100 text-blue-600',
+    },
+    {
+        icon: FaVideo,
+        title: 'HD Video Consultations',
+        desc: 'Crystal-clear video calls with real-time in-call chat from any device, anywhere.',
+        color: 'bg-purple-100 text-purple-600',
+    },
+    {
+        icon: FaCalendarCheck,
+        title: 'Easy Scheduling',
+        desc: 'Book appointments in seconds with instant confirmation and automated reminders.',
+        color: 'bg-green-100 text-green-600',
+    },
+    {
+        icon: FaShieldAlt,
+        title: 'HIPAA Compliant',
+        desc: 'Your health data is protected with end-to-end encryption and strict privacy controls.',
+        color: 'bg-red-100 text-red-600',
+    },
+    {
+        icon: FaHeartbeat,
+        title: 'AI Symptom Checker',
+        desc: 'Describe your symptoms and our AI instantly recommends the right specialist for you.',
+        color: 'bg-pink-100 text-pink-600',
+    },
+    {
+        icon: FaFileAlt,
+        title: 'Digital Medical Records',
+        desc: 'Access prescriptions, lab results, and your full medical history anytime, anywhere.',
+        color: 'bg-yellow-100 text-yellow-600',
+    },
 ];
 
-const stats = [
-    { value: '500+', label: 'Verified Doctors' },
-    { value: '50K+', label: 'Patients Served' },
-    { value: '15+', label: 'Specializations' },
-    { value: '4.9', label: 'Average Rating' },
+const STATS = [
+    { value: '500+', label: 'Verified Doctors', icon: '👨‍⚕️' },
+    { value: '50K+', label: 'Patients Served', icon: '🏥' },
+    { value: '15+', label: 'Specializations', icon: '🩺' },
+    { value: '4.9', label: 'Average Rating', icon: '⭐' },
 ];
 
-const categories = [
-    'Cardiology', 'Dermatology', 'Neurology', 'Orthopedics',
-    'Pediatrics', 'Psychiatry', 'Gynecology', 'General Practice',
+const CATEGORIES = [
+    { name: 'Cardiology', emoji: '❤️' },
+    { name: 'Neurology', emoji: '🧠' },
+    { name: 'Orthopedics', emoji: '🦴' },
+    { name: 'Pediatrics', emoji: '👶' },
+    { name: 'Dermatology', emoji: '🧴' },
+    { name: 'Ophthalmology', emoji: '👁️' },
+    { name: 'Psychiatry', emoji: '🧘' },
+    { name: 'Pulmonology', emoji: '🫁' },
+    { name: 'Endocrinology', emoji: '⚗️' },
+    { name: 'ENT', emoji: '👂' },
+    { name: 'Gynecology', emoji: '🌸' },
+    { name: 'Urology', emoji: '🫘' },
+];
+
+const TESTIMONIALS = [
+    {
+        name: 'Sarah Johnson',
+        role: 'Patient',
+        avatar: 'SJ',
+        rating: 5,
+        text: 'TeleHealth made it so easy to consult a cardiologist from home. The video quality was excellent and the doctor was incredibly thorough. Highly recommend!',
+        specialty: 'Cardiology',
+    },
+    {
+        name: 'Michael Chen',
+        role: 'Patient',
+        avatar: 'MC',
+        rating: 5,
+        text: 'I was skeptical about online consultations, but TeleHealth changed my mind. Got a dermatology consultation within hours. The AI symptom checker pointed me to exactly the right specialist.',
+        specialty: 'Dermatology',
+    },
+    {
+        name: 'Priya Sharma',
+        role: 'Patient',
+        avatar: 'PS',
+        rating: 5,
+        text: 'As a busy mom, TeleHealth is a lifesaver. Booked a pediatric consultation for my son at midnight and got expert advice within the hour. The platform is intuitive and secure.',
+        specialty: 'Pediatrics',
+    },
+];
+
+const FEATURED_DOCTORS = [
+    { name: 'Dr. Emily Carter', specialty: 'Cardiologist', rating: 4.9, reviews: 128, exp: 12, initials: 'EC' },
+    { name: 'Dr. James Wilson', specialty: 'Neurologist', rating: 4.8, reviews: 94, exp: 15, initials: 'JW' },
+    { name: 'Dr. Aisha Patel', specialty: 'Pediatrician', rating: 5.0, reviews: 203, exp: 8, initials: 'AP' },
 ];
 
 const Home = () => {
+    const [animatedStats, setAnimatedStats] = useState(false);
+
+    useEffect(() => {
+        const timer = setTimeout(() => setAnimatedStats(true), 300);
+        return () => clearTimeout(timer);
+    }, []);
+
     return (
-        <div className="min-h-screen">
-            {/* Hero */}
-            <section className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white py-20 px-4">
-                <div className="max-w-6xl mx-auto text-center">
-                    <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+        <div className="min-h-screen bg-white dark:bg-gray-900">
+
+            {/* ── Hero Section ─────────────────────────────────────────────── */}
+            <section className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-900 text-white py-24 px-4">
+                {/* Animated background blobs */}
+                <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse" />
+                <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse" style={{ animationDelay: '1s' }} />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '2s' }} />
+
+                <div className="relative max-w-6xl mx-auto text-center">
+                    {/* Trust badges */}
+                    <div className="flex flex-wrap items-center justify-center gap-3 mb-8">
+                        <span className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-white/20 text-white text-xs font-medium px-3 py-1.5 rounded-full">
+                            <FaShieldAlt className="text-green-400" /> HIPAA Compliant
+                        </span>
+                        <span className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-white/20 text-white text-xs font-medium px-3 py-1.5 rounded-full">
+                            <FaLock className="text-yellow-400" /> SSL Encrypted
+                        </span>
+                        <span className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-white/20 text-white text-xs font-medium px-3 py-1.5 rounded-full">
+                            <FaClock className="text-blue-300" /> 24/7 Available
+                        </span>
+                        <span className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-white/20 text-white text-xs font-medium px-3 py-1.5 rounded-full">
+                            <FaAward className="text-orange-400" /> Verified Doctors
+                        </span>
+                    </div>
+
+                    <h1 className="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight">
                         Healthcare at Your
-                        <span className="text-yellow-300"> Fingertips</span>
+                        <span className="text-yellow-300 block md:inline"> Fingertips</span>
                     </h1>
-                    <p className="text-xl text-blue-100 mb-10 max-w-2xl mx-auto">
-                        Connect with top doctors instantly. Book appointments, get consultations, and manage your health — all in one place.
+                    <p className="text-xl text-blue-100 mb-10 max-w-2xl mx-auto leading-relaxed">
+                        Connect with top verified doctors instantly. Book appointments, get HD video consultations, and manage your health — all in one secure place.
                     </p>
+
+                    {/* CTA Buttons */}
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <Link
                             to="/doctors"
-                            className="bg-white text-blue-600 font-semibold py-3 px-8 rounded-xl hover:bg-blue-50 transition-colors text-lg"
+                            className="group bg-white text-blue-600 font-bold py-4 px-8 rounded-2xl hover:bg-blue-50 transition-all text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-2"
                         >
-                            Find a Doctor
+                            <FaUserMd /> Find a Doctor
+                            <FaArrowRight className="group-hover:translate-x-1 transition-transform text-sm" />
                         </Link>
                         <Link
                             to="/symptom-checker"
-                            className="bg-green-400 text-gray-900 font-semibold py-3 px-8 rounded-xl hover:bg-green-300 transition-colors text-lg flex items-center justify-center gap-2"
+                            className="group bg-green-400 text-gray-900 font-bold py-4 px-8 rounded-2xl hover:bg-green-300 transition-all text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-2"
                         >
                             🩺 AI Symptom Checker
                         </Link>
                         <Link
                             to="/register"
-                            className="bg-yellow-400 text-gray-900 font-semibold py-3 px-8 rounded-xl hover:bg-yellow-300 transition-colors text-lg"
+                            className="group bg-yellow-400 text-gray-900 font-bold py-4 px-8 rounded-2xl hover:bg-yellow-300 transition-all text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-2"
                         >
                             Get Started Free
+                            <FaArrowRight className="group-hover:translate-x-1 transition-transform text-sm" />
                         </Link>
                     </div>
                 </div>
             </section>
 
-            {/* Stats */}
-            <section className="bg-white py-12 border-b">
+            {/* ── Live Stats Bar ────────────────────────────────────────────── */}
+            <section className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 py-10 shadow-sm">
                 <div className="max-w-6xl mx-auto px-4">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                        {stats.map((stat) => (
-                            <div key={stat.label} className="text-center">
-                                <div className="text-3xl font-bold text-blue-600">{stat.value}</div>
-                                <div className="text-gray-600 mt-1">{stat.label}</div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* Features */}
-            <section className="py-16 px-4 bg-gray-50">
-                <div className="max-w-6xl mx-auto">
-                    <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-                        Why Choose TeleHealth?
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {features.map(({ icon: Icon, title, desc }) => (
-                            <div key={title} className="card text-center hover:shadow-md transition-shadow">
-                                <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <Icon className="text-blue-600 text-2xl" />
-                                </div>
-                                <h3 className="font-semibold text-gray-900 mb-2">{title}</h3>
-                                <p className="text-gray-600 text-sm">{desc}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* Categories */}
-            <section className="py-16 px-4 bg-white">
-                <div className="max-w-6xl mx-auto">
-                    <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">
-                        Browse by Specialization
-                    </h2>
-                    <p className="text-center text-gray-600 mb-10">Find the right specialist for your needs</p>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        {categories.map((cat) => (
-                            <Link
-                                key={cat}
-                                to={`/doctors?category=${cat}`}
-                                className="p-4 border border-gray-200 rounded-xl text-center hover:border-blue-400 hover:bg-blue-50 transition-all group"
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        {STATS.map((stat) => (
+                            <div
+                                key={stat.label}
+                                className={`text-center transition-all duration-700 ${animatedStats ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
                             >
-                                <span className="font-medium text-gray-700 group-hover:text-blue-600">{cat}</span>
+                                <div className="text-3xl mb-1">{stat.icon}</div>
+                                <div className="text-3xl md:text-4xl font-extrabold text-blue-600 dark:text-blue-400">{stat.value}</div>
+                                <div className="text-gray-500 dark:text-gray-400 text-sm mt-1 font-medium">{stat.label}</div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* ── Why Choose Us ─────────────────────────────────────────────── */}
+            <section className="py-20 px-4 bg-gray-50 dark:bg-gray-900">
+                <div className="max-w-6xl mx-auto">
+                    <div className="text-center mb-14">
+                        <span className="text-blue-600 dark:text-blue-400 font-semibold text-sm uppercase tracking-wider">Why TeleHealth</span>
+                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mt-2">
+                            Everything You Need for Better Health
+                        </h2>
+                        <p className="text-gray-500 dark:text-gray-400 mt-3 max-w-xl mx-auto">
+                            We combine cutting-edge technology with compassionate care to deliver a healthcare experience like no other.
+                        </p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {FEATURES.map(({ icon: Icon, title, desc, color }) => (
+                            <div
+                                key={title}
+                                className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-gray-100 dark:border-gray-700 group"
+                            >
+                                <div className={`w-14 h-14 ${color} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                                    <Icon className="text-2xl" />
+                                </div>
+                                <h3 className="font-bold text-gray-900 dark:text-white text-lg mb-2">{title}</h3>
+                                <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">{desc}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* ── Specialization Categories ─────────────────────────────────── */}
+            <section className="py-20 px-4 bg-white dark:bg-gray-800">
+                <div className="max-w-6xl mx-auto">
+                    <div className="text-center mb-12">
+                        <span className="text-blue-600 dark:text-blue-400 font-semibold text-sm uppercase tracking-wider">Specializations</span>
+                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mt-2">
+                            Browse by Specialization
+                        </h2>
+                        <p className="text-gray-500 dark:text-gray-400 mt-3">Find the right specialist for your specific health needs</p>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                        {CATEGORIES.map(({ name, emoji }) => (
+                            <Link
+                                key={name}
+                                to={`/doctors?category=${name}`}
+                                className="group flex flex-col items-center p-4 border-2 border-gray-100 dark:border-gray-700 rounded-2xl text-center hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 dark:hover:border-blue-500 transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
+                            >
+                                <span className="text-3xl mb-2 group-hover:scale-110 transition-transform">{emoji}</span>
+                                <span className="font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 text-xs leading-tight">{name}</span>
                             </Link>
                         ))}
                     </div>
-                    <div className="text-center mt-8">
-                        <Link to="/doctors" className="btn-primary inline-block">
-                            View All Doctors
+                    <div className="text-center mt-10">
+                        <Link
+                            to="/doctors"
+                            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-xl transition-colors shadow-md hover:shadow-lg"
+                        >
+                            View All Doctors <FaArrowRight />
                         </Link>
                     </div>
                 </div>
             </section>
 
-            {/* How it works */}
-            <section className="py-16 px-4 bg-blue-50">
+            {/* ── How It Works ──────────────────────────────────────────────── */}
+            <section className="py-20 px-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800">
                 <div className="max-w-6xl mx-auto">
-                    <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">How It Works</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div className="text-center mb-14">
+                        <span className="text-blue-600 dark:text-blue-400 font-semibold text-sm uppercase tracking-wider">Simple Process</span>
+                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mt-2">How It Works</h2>
+                        <p className="text-gray-500 dark:text-gray-400 mt-3">Get expert medical care in 3 simple steps</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+                        {/* Connector line (desktop) */}
+                        <div className="hidden md:block absolute top-10 left-1/4 right-1/4 h-0.5 bg-blue-200 dark:bg-blue-800" />
                         {[
-                            { step: '01', title: 'Find a Doctor', desc: 'Search by specialty, category, or name. Filter by fees and ratings.' },
-                            { step: '02', title: 'Book a Slot', desc: 'Choose a convenient date and time from the doctor\'s availability.' },
-                            { step: '03', title: 'Start Consultation', desc: 'Join the video call at your scheduled time and get expert care.' },
-                        ].map(({ step, title, desc }) => (
-                            <div key={step} className="text-center">
-                                <div className="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                                    {step}
+                            {
+                                step: '1',
+                                title: 'Find a Doctor',
+                                desc: 'Search by specialty, category, or name. Filter by fees, ratings, and availability.',
+                                icon: '🔍',
+                            },
+                            {
+                                step: '2',
+                                title: 'Book a Slot',
+                                desc: 'Choose a convenient date and time from the doctor\'s real-time availability calendar.',
+                                icon: '📅',
+                            },
+                            {
+                                step: '3',
+                                title: 'Start Consultation',
+                                desc: 'Join the HD video call at your scheduled time and receive expert medical care.',
+                                icon: '💊',
+                            },
+                        ].map(({ step, title, desc, icon }) => (
+                            <div key={step} className="text-center relative">
+                                <div className="relative inline-block mb-6">
+                                    <div className="w-20 h-20 bg-blue-600 dark:bg-blue-500 text-white rounded-full flex items-center justify-center mx-auto shadow-lg shadow-blue-200 dark:shadow-blue-900">
+                                        <span className="text-3xl">{icon}</span>
+                                    </div>
+                                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-400 text-gray-900 rounded-full flex items-center justify-center text-sm font-extrabold shadow">
+                                        {step}
+                                    </div>
                                 </div>
-                                <h3 className="text-xl font-semibold text-gray-900 mb-2">{title}</h3>
-                                <p className="text-gray-600">{desc}</p>
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">{title}</h3>
+                                <p className="text-gray-500 dark:text-gray-400 leading-relaxed">{desc}</p>
                             </div>
                         ))}
                     </div>
                 </div>
             </section>
 
-            {/* CTA */}
-            <section className="py-16 px-4 bg-blue-600 text-white text-center">
-                <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
-                <p className="text-blue-100 mb-8 text-lg">Join thousands of patients who trust TeleHealth for their healthcare needs.</p>
-                <Link to="/register" className="bg-white text-blue-600 font-semibold py-3 px-8 rounded-xl hover:bg-blue-50 transition-colors text-lg inline-block">
-                    Create Free Account
-                </Link>
+            {/* ── Testimonials ──────────────────────────────────────────────── */}
+            <section className="py-20 px-4 bg-white dark:bg-gray-900">
+                <div className="max-w-6xl mx-auto">
+                    <div className="text-center mb-14">
+                        <span className="text-blue-600 dark:text-blue-400 font-semibold text-sm uppercase tracking-wider">Patient Stories</span>
+                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mt-2">
+                            What Our Patients Say
+                        </h2>
+                        <p className="text-gray-500 dark:text-gray-400 mt-3">Real experiences from real patients</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {TESTIMONIALS.map((t) => (
+                            <div
+                                key={t.name}
+                                className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+                            >
+                                <FaQuoteLeft className="text-blue-200 dark:text-blue-800 text-3xl mb-4" />
+                                <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-5">{t.text}</p>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-11 h-11 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                                        {t.avatar}
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-gray-900 dark:text-white text-sm">{t.name}</p>
+                                        <p className="text-gray-400 text-xs">{t.specialty} Patient</p>
+                                    </div>
+                                    <div className="ml-auto flex gap-0.5">
+                                        {Array.from({ length: t.rating }).map((_, i) => (
+                                            <FaStar key={i} className="text-yellow-400 text-xs" />
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </section>
 
-            {/* Footer */}
-            <footer className="bg-gray-900 text-gray-400 py-8 px-4 text-center">
-                <p>&copy; {new Date().getFullYear()} TeleHealth. All rights reserved.</p>
+            {/* ── Doctor Showcase ───────────────────────────────────────────── */}
+            <section className="py-20 px-4 bg-gray-50 dark:bg-gray-800">
+                <div className="max-w-6xl mx-auto">
+                    <div className="text-center mb-12">
+                        <span className="text-blue-600 dark:text-blue-400 font-semibold text-sm uppercase tracking-wider">Our Doctors</span>
+                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mt-2">
+                            Meet Our Top Specialists
+                        </h2>
+                        <p className="text-gray-500 dark:text-gray-400 mt-3">Highly qualified doctors ready to help you</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {FEATURED_DOCTORS.map((doc) => (
+                            <div
+                                key={doc.name}
+                                className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 text-center"
+                            >
+                                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl mx-auto mb-4 shadow-lg">
+                                    {doc.initials}
+                                </div>
+                                <h3 className="font-bold text-gray-900 dark:text-white text-lg">{doc.name}</h3>
+                                <p className="text-blue-600 dark:text-blue-400 text-sm font-medium mt-1">{doc.specialty}</p>
+                                <div className="flex items-center justify-center gap-1 mt-2">
+                                    <FaStar className="text-yellow-400 text-sm" />
+                                    <span className="font-semibold text-gray-800 dark:text-gray-200 text-sm">{doc.rating}</span>
+                                    <span className="text-gray-400 text-xs">({doc.reviews} reviews)</span>
+                                </div>
+                                <p className="text-gray-400 text-xs mt-1">{doc.exp} years experience</p>
+                                <div className="flex items-center justify-center gap-1 mt-3">
+                                    <FaCheckCircle className="text-blue-500 text-xs" />
+                                    <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">Verified Doctor</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="text-center mt-10">
+                        <Link
+                            to="/doctors"
+                            className="inline-flex items-center gap-2 border-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 font-semibold py-3 px-8 rounded-xl hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 dark:hover:text-white transition-all"
+                        >
+                            View All Doctors <FaArrowRight />
+                        </Link>
+                    </div>
+                </div>
+            </section>
+
+            {/* ── CTA Banner ────────────────────────────────────────────────── */}
+            <section className="py-20 px-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white text-center relative overflow-hidden">
+                <div className="absolute inset-0 opacity-10">
+                    <div className="absolute top-0 left-0 w-64 h-64 bg-white rounded-full -translate-x-1/2 -translate-y-1/2" />
+                    <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full translate-x-1/3 translate-y-1/3" />
+                </div>
+                <div className="relative max-w-3xl mx-auto">
+                    <h2 className="text-3xl md:text-4xl font-extrabold mb-4">Ready to Take Control of Your Health?</h2>
+                    <p className="text-blue-100 mb-8 text-lg leading-relaxed">
+                        Join over 50,000 patients who trust TeleHealth for expert medical care. Sign up free today — no credit card required.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                        <Link
+                            to="/register"
+                            className="bg-white text-blue-600 font-bold py-4 px-10 rounded-2xl hover:bg-blue-50 transition-all text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 inline-flex items-center gap-2"
+                        >
+                            Create Free Account <FaArrowRight />
+                        </Link>
+                        <Link
+                            to="/doctors"
+                            className="bg-white/10 backdrop-blur-sm border-2 border-white/30 text-white font-bold py-4 px-10 rounded-2xl hover:bg-white/20 transition-all text-lg inline-flex items-center gap-2"
+                        >
+                            Browse Doctors
+                        </Link>
+                    </div>
+                </div>
+            </section>
+
+            {/* ── Footer ────────────────────────────────────────────────────── */}
+            <footer className="bg-gray-900 dark:bg-black text-gray-400 py-12 px-4">
+                <div className="max-w-6xl mx-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                        <div>
+                            <h3 className="text-white font-bold text-lg mb-3">TeleHealth</h3>
+                            <p className="text-sm leading-relaxed">Your trusted platform for online medical consultations with verified specialists.</p>
+                        </div>
+                        <div>
+                            <h4 className="text-white font-semibold mb-3">For Patients</h4>
+                            <ul className="space-y-2 text-sm">
+                                <li><Link to="/doctors" className="hover:text-white transition-colors">Find Doctors</Link></li>
+                                <li><Link to="/symptom-checker" className="hover:text-white transition-colors">Symptom Checker</Link></li>
+                                <li><Link to="/register" className="hover:text-white transition-colors">Sign Up Free</Link></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 className="text-white font-semibold mb-3">Specializations</h4>
+                            <ul className="space-y-2 text-sm">
+                                <li><Link to="/doctors?category=Cardiology" className="hover:text-white transition-colors">Cardiology</Link></li>
+                                <li><Link to="/doctors?category=Neurology" className="hover:text-white transition-colors">Neurology</Link></li>
+                                <li><Link to="/doctors?category=Pediatrics" className="hover:text-white transition-colors">Pediatrics</Link></li>
+                                <li><Link to="/doctors?category=Dermatology" className="hover:text-white transition-colors">Dermatology</Link></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 className="text-white font-semibold mb-3">Trust & Safety</h4>
+                            <ul className="space-y-2 text-sm">
+                                <li className="flex items-center gap-2"><FaShieldAlt className="text-green-400" /> HIPAA Compliant</li>
+                                <li className="flex items-center gap-2"><FaLock className="text-yellow-400" /> SSL Encrypted</li>
+                                <li className="flex items-center gap-2"><FaCheckCircle className="text-blue-400" /> Verified Doctors</li>
+                                <li className="flex items-center gap-2"><FaClock className="text-purple-400" /> 24/7 Support</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div className="border-t border-gray-800 pt-6 text-center text-sm">
+                        <p>&copy; {new Date().getFullYear()} TeleHealth. All rights reserved. Built with care for better health.</p>
+                    </div>
+                </div>
             </footer>
         </div>
     );

@@ -9,7 +9,7 @@ const { v4: uuidv4 } = require('uuid');
 // @route   POST /api/appointments
 // @access  Private (Patient)
 const bookAppointment = asyncHandler(async (req, res) => {
-  const { doctorId, appointmentDate, timeSlot, symptoms, type = 'video' } = req.body;
+  const { doctorId, appointmentDate, timeSlot, symptoms, type = 'video', bookedForId } = req.body;
 
   const doctor = await Doctor.findById(doctorId).populate('user', 'name email');
   if (!doctor) {
@@ -41,6 +41,18 @@ const bookAppointment = asyncHandler(async (req, res) => {
     throw new Error('Appointment date must be in the future');
   }
 
+  // Resolve family member if booking for dependent
+  let bookedForName = null;
+  if (bookedForId) {
+    const FamilyMember = require('../models/FamilyMember');
+    const member = await FamilyMember.findOne({ _id: bookedForId, patient: req.user._id });
+    if (!member) {
+      res.status(404);
+      throw new Error('Family member not found');
+    }
+    bookedForName = member.name;
+  }
+
   const appointment = await Appointment.create({
     patient: req.user._id,
     doctor: doctorId,
@@ -52,6 +64,8 @@ const bookAppointment = asyncHandler(async (req, res) => {
       amount: doctor.consultationFee,
       status: 'pending',
     },
+    bookedFor: bookedForId || undefined,
+    bookedForName: bookedForName || undefined,
   });
 
   await appointment.populate([

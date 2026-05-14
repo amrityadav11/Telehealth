@@ -1,28 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { fetchMyAppointments, updateAppointmentStatus } from '../../store/slices/appointmentSlice';
 import StatusBadge from '../../components/common/StatusBadge';
 import Pagination from '../../components/common/Pagination';
 import Spinner from '../../components/common/Spinner';
 import PaymentModal from '../../components/payment/PaymentModal';
 import RescheduleModal from '../../components/appointments/RescheduleModal';
-import ChatModal from '../../components/chat/ChatModal';
 import { format } from 'date-fns';
-import { FaVideo, FaTimes, FaStar, FaCreditCard, FaCalendarAlt, FaComments, FaDownload } from 'react-icons/fa';
+import { FaVideo, FaTimes, FaStar, FaCreditCard, FaCalendarAlt, FaComments, FaDownload, FaFilePdf } from 'react-icons/fa';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { downloadReceiptPDF } from '../../utils/receiptPDF';
+import PrescriptionPDF from '../../components/appointments/PrescriptionPDF';
 
 const PatientAppointments = () => {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const { appointments, loading, pages, currentPage } = useSelector((s) => s.appointments);
     const [statusFilter, setStatusFilter] = useState('');
     const [reviewModal, setReviewModal] = useState(null);
     const [reviewData, setReviewData] = useState({ rating: 5, comment: '' });
     const [paymentAppointment, setPaymentAppointment] = useState(null);
     const [rescheduleAppointment, setRescheduleAppointment] = useState(null);
-    const [chatAppointment, setChatAppointment] = useState(null);
 
     useEffect(() => {
         dispatch(fetchMyAppointments({ status: statusFilter, page: 1 }));
@@ -135,14 +135,14 @@ const PatientAppointments = () => {
                                         </Link>
                                     )}
 
-                                    {/* Chat button — available for pending/confirmed/completed */}
+                                    {/* Chat button — navigates to dedicated chat page */}
                                     {['pending', 'confirmed', 'completed'].includes(appt.status) && (
-                                        <button
-                                            onClick={() => setChatAppointment(appt)}
+                                        <Link
+                                            to={`/patient/chat/${appt._id}`}
                                             className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 font-medium border border-blue-200 hover:border-blue-400 px-2.5 py-1.5 rounded-lg transition-colors"
                                         >
                                             <FaComments className="text-xs" /> Chat
-                                        </button>
+                                        </Link>
                                     )}
 
                                     {/* Download Receipt — shown when payment is paid */}
@@ -163,6 +163,11 @@ const PatientAppointments = () => {
                                         >
                                             <FaStar className="text-xs" /> Review
                                         </button>
+                                    )}
+
+                                    {/* Prescription PDF — shown for completed appointments with prescription */}
+                                    {appt.status === 'completed' && appt.prescription?.medicines?.length > 0 && (
+                                        <PrescriptionPDF appointment={appt} className="text-sm py-1.5 px-3" />
                                     )}
 
                                     {['pending', 'confirmed'].includes(appt.status) && (
@@ -230,14 +235,6 @@ const PatientAppointments = () => {
                     appointment={rescheduleAppointment}
                     onSuccess={handleRescheduleSuccess}
                     onClose={() => setRescheduleAppointment(null)}
-                />
-            )}
-
-            {/* Chat Modal */}
-            {chatAppointment && (
-                <ChatModal
-                    appointment={chatAppointment}
-                    onClose={() => setChatAppointment(null)}
                 />
             )}
 

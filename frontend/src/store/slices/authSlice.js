@@ -28,6 +28,12 @@ export const loginUser = createAsyncThunk(
     async (credentials, { rejectWithValue }) => {
         try {
             const { data } = await api.post('/auth/login', credentials);
+
+            // 2FA required — don't store token yet, just return the flag
+            if (data.twoFactorRequired) {
+                return data; // { twoFactorRequired: true, userId, message }
+            }
+
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
             return data;
@@ -107,6 +113,8 @@ const authSlice = createSlice({
             .addCase(loginUser.pending, (state) => { state.loading = true; state.error = null; })
             .addCase(loginUser.fulfilled, (state, action) => {
                 state.loading = false;
+                // 2FA required — don't set user/token yet, the Login page handles redirect
+                if (action.payload.twoFactorRequired) return;
                 state.user = action.payload.user;
                 state.token = action.payload.token;
                 toast.success(`Welcome back, ${action.payload.user.name}!`);

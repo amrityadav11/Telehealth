@@ -5,6 +5,7 @@ import { initSocket, getSocket } from '../../services/socket';
 import {
     FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash,
     FaPhoneSlash, FaComments, FaTimes, FaPaperPlane,
+    FaDesktop, FaWifi, FaUserCircle,
 } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
@@ -47,7 +48,11 @@ const ConsultationRoom = () => {
     const [remotePeer, setRemotePeer] = useState(null);
     const [callDuration, setCallDuration] = useState(0);
     const [unreadMessages, setUnreadMessages] = useState(0);
+    const [isScreenSharing, setIsScreenSharing] = useState(false);
+    const [connectionQuality, setConnectionQuality] = useState('good'); // 'good' | 'fair' | 'poor'
+    const screenStreamRef = useRef(null);
     const timerRef = useRef(null);
+    const qualityCheckRef = useRef(null);
 
     // ── Step 1: Ensure socket is connected (works in new tab too) ──────────
     useEffect(() => {
@@ -306,6 +311,10 @@ const ConsultationRoom = () => {
             localStreamRef.current.getTracks().forEach((t) => t.stop());
             localStreamRef.current = null;
         }
+        if (screenStreamRef.current) {
+            screenStreamRef.current.getTracks().forEach((t) => t.stop());
+            screenStreamRef.current = null;
+        }
         if (peerConnectionRef.current) {
             peerConnectionRef.current.close();
             peerConnectionRef.current = null;
@@ -314,7 +323,93 @@ const ConsultationRoom = () => {
             clearInterval(timerRef.current);
             timerRef.current = null;
         }
+        if (qualityCheckRef.current) {
+            clearInterval(qualityCheckRef.current);
+            qualityCheckRef.current = null;
+        }
     };
+
+    const toggleScreenShare = async () => {
+        if (isScreenSharing) {
+            // Stop screen sharing, revert to camera
+            if (screenStreamRef.current) {
+                screenStreamRef.current.getTracks().forEach((t) => t.stop());
+                screenStreamRef.current = null;
+            }
+            if (localStreamRef.current && peerConnectionRef.current) {
+                const videoTrack = localStreamRef.current.getVideoTracks()[0];
+                if (videoTrack) {
+                    const sender = peerConnectionRef.current.getSenders().find((s) => s.track?.kind === 'video');
+                    if (sender) sender.replaceTrack(videoTrack);
+                }
+                if (localVideoRef.current) localVideoRef.current.srcObject = localStreamRef.current;
+            }
+            setIsScreenSharing(false);
+            toast('Screen sharing stopped');
+        } else {
+            try {
+                const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+                screenStreamRef.current = screenStream;
+                const screenTrack = screenStream.getVideoTracks()[0];
+
+                if (peerConnectionRef.current) {
+                    const sender = peerConnectionRef.current.getSenders().find((s) => s.track?.kind === 'video');
+                    if (sender) sender.replaceTrack(screenTrack);
+                }
+                if (localVideoRef.current) {
+                    const combined = new MediaStream([screenTrack, ...(localStreamRef.current?.getAudioTracks() || [])]);
+                    localVideoRef.current.srcObject = combined;
+                }
+
+                screenTrack.onended = () => {
+                    setIsScreenSharing(false);
+                    if (localStreamRef.current && peerConnectionRef.current) {
+                        const videoTrack = localStreamRef.current.getVideoTracks()[0];
+                        if (videoTrack) {
+                            const sender = peerConnectionRef.current.getSenders().find((s) => s.track?.kind === 'video');
+                            if (sender) sender.replaceTrack(videoTrack);
+                        }
+                        if (localVideoRef.current) localVideoRef.current.srcObject = localStreamRef.current;
+                    }
+                };
+
+                setIsScreenSharing(true);
+                toast.success('Screen sharing started');
+            } catch (err) {
+                if (err.name !== 'NotAllowedError') {
+                    toast.error('Could not start screen sharing');
+                }
+            }
+        }
+    };
+
+    // Connection quality check via RTCPeerConnection stats
+    useEffect(() => {
+        if (!isConnected) return;
+        qualityCheckRef.current = setInterval(async () => {
+            if (!peerConnectionRef.current) return;
+            try {
+                const stats = await peerConnectionRef.current.getStats();
+                let rtt = null;
+                stats.forEach((report) => {
+                    if (report.type === 'candidate-pair' && report.state === 'succeeded') {
+                        rtt = report.currentRoundTripTime;
+                    }
+                });
+                if (rtt !== null) {
+                    if (rtt < 0.1) setConnectionQuality('good');
+                    else if (rtt < 0.3) setConnectionQuality('fair');
+                    else setConnectionQuality('poor');
+                }
+            } catch (_) { }
+        }, 5000);
+        return () => {
+            if (qualityCheckRef.current) clearInterval(qualityCheckRef.current);
+        };
+    }, [isConnected]);
+
+    const qualityColor = connectionQuality === 'good' ? 'text-green-400' : connectionQuality === 'fair' ? 'text-yellow-400' : 'text-red-400';
+    const qualityBars = connectionQuality === 'good' ? 3 : connectionQuality === 'fair' ? 2 : 1;
 
     const formatDuration = (seconds) => {
         const m = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -348,7 +443,27 @@ const ConsultationRoom = () => {
                     </span>
                 </div>
                 <div className="flex items-center gap-4">
-                    <span className="text-gray-400 text-sm font-mono">{formatDuration(callDuration)}</span>
+                    {/* Session Timer - prominent */}
+                    <div className="flex items-center gap-2 bg-gray-700 px-3 py-1.5 rounded-lg">
+                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                        <span className="text-white text-sm font-mono font-bold">{formatDuration(callDuration)}</span>
+                    </div>
+                    {/* Connection Quality Indicator */}
+                    {isConnected && (
+                        <div className="flex items-center gap-1.5" title={`Connection: ${connectionQuality}`}>
+                            <FaWifi className={`text-sm ${qualityColor}`} />
+                            <div className="flex gap-0.5 items-end">
+                                {[1, 2, 3].map((bar) => (
+                                    <div
+                                        key={bar}
+                                        className={`w-1 rounded-sm transition-colors ${bar <= qualityBars ? qualityColor.replace('text-', 'bg-') : 'bg-gray-600'}`}
+                                        style={{ height: `${bar * 4}px` }}
+                                    />
+                                ))}
+                            </div>
+                            <span className="text-xs text-gray-400 capitalize hidden sm:block">{connectionQuality}</span>
+                        </div>
+                    )}
                     <span className="text-gray-500 text-xs hidden sm:block">Room: {roomId.slice(-8)}</span>
                 </div>
             </div>
@@ -363,14 +478,41 @@ const ConsultationRoom = () => {
                         playsInline
                         className="w-full h-full object-cover"
                     />
+
+                    {/* Waiting Room State */}
                     {!isConnected && (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="text-center text-white">
-                                <div className="w-20 h-20 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <FaVideo className="text-3xl text-gray-400" />
+                        <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80 backdrop-blur-sm">
+                            <div className="text-center text-white max-w-sm px-6">
+                                <div className="relative w-24 h-24 mx-auto mb-6">
+                                    <div className="w-24 h-24 bg-blue-600/30 rounded-full flex items-center justify-center">
+                                        <FaUserCircle className="text-5xl text-blue-400" />
+                                    </div>
+                                    <div className="absolute inset-0 rounded-full border-4 border-blue-500/50 animate-ping" />
                                 </div>
-                                <p className="text-gray-300 text-sm">Waiting for the other participant to join...</p>
-                                <p className="text-gray-500 text-xs mt-2">Share the room link or wait for them to join</p>
+                                <h3 className="text-xl font-bold mb-2">Waiting Room</h3>
+                                <p className="text-gray-300 text-sm mb-4">
+                                    You're in the waiting room. The other participant will join shortly.
+                                </p>
+                                <div className="flex items-center justify-center gap-2 text-gray-400 text-xs">
+                                    <div className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                    <div className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce" style={{ animationDelay: '200ms' }} />
+                                    <div className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce" style={{ animationDelay: '400ms' }} />
+                                    <span className="ml-1">Waiting for participant</span>
+                                </div>
+                                <div className="mt-4 bg-gray-800/80 rounded-lg px-4 py-2 text-xs text-gray-400">
+                                    Room ID: <span className="text-gray-200 font-mono">{roomId.slice(-12)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Participant name overlay on remote video */}
+                    {isConnected && remotePeer?.name && (
+                        <div className="absolute bottom-4 left-4">
+                            <div className="flex items-center gap-2 bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-lg">
+                                <FaUserCircle className="text-gray-300 text-sm" />
+                                <span className="text-white text-sm font-medium">{remotePeer.name}</span>
+                                <div className="w-2 h-2 bg-green-400 rounded-full" />
                             </div>
                         </div>
                     )}
@@ -391,13 +533,15 @@ const ConsultationRoom = () => {
                         </div>
                     )}
                     <div className="absolute bottom-1 left-0 right-0 text-center">
-                        <span className="text-white text-xs bg-black/50 px-2 py-0.5 rounded-full">You</span>
+                        <span className="text-white text-xs bg-black/50 px-2 py-0.5 rounded-full">
+                            {isScreenSharing ? '🖥 Screen' : 'You'}
+                        </span>
                     </div>
                 </div>
             </div>
 
             {/* Controls */}
-            <div className="bg-gray-800 px-6 py-4 flex items-center justify-center gap-4 flex-shrink-0">
+            <div className="bg-gray-800 px-6 py-4 flex items-center justify-center gap-3 flex-shrink-0 flex-wrap">
                 <button
                     onClick={toggleAudio}
                     title={isAudioEnabled ? 'Mute' : 'Unmute'}
@@ -414,6 +558,16 @@ const ConsultationRoom = () => {
                         }`}
                 >
                     {isVideoEnabled ? <FaVideo /> : <FaVideoSlash />}
+                </button>
+
+                {/* Screen Share Button */}
+                <button
+                    onClick={toggleScreenShare}
+                    title={isScreenSharing ? 'Stop screen sharing' : 'Share screen'}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${isScreenSharing ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-600 hover:bg-gray-500 text-white'
+                        }`}
+                >
+                    <FaDesktop />
                 </button>
 
                 <button

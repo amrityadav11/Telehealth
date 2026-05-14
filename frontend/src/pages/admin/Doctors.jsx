@@ -3,7 +3,7 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 import Spinner from '../../components/common/Spinner';
 import Pagination from '../../components/common/Pagination';
-import { FaCheck, FaTimes, FaPlus, FaUserMd, FaFileExcel } from 'react-icons/fa';
+import { FaCheck, FaTimes, FaPlus, FaUserMd, FaFileExcel, FaShieldAlt } from 'react-icons/fa';
 import { exportDoctorsExcel } from '../../utils/exportExcel';
 
 const CATEGORIES = [
@@ -57,6 +57,16 @@ const AdminDoctors = () => {
             fetchDoctors();
         } catch (err) {
             toast.error(err.response?.data?.message || 'Action failed');
+        }
+    };
+
+    const handleVerify = async (doctorId, currentlyVerified) => {
+        try {
+            await api.put(`/admin/doctors/${doctorId}/verify`);
+            toast.success(`Doctor ${currentlyVerified ? 'unverified' : 'verified'} successfully`);
+            fetchDoctors();
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Verification failed');
         }
     };
 
@@ -187,9 +197,14 @@ const AdminDoctors = () => {
                                                 }`}>
                                                 {doc.isApproved ? 'Approved' : 'Pending'}
                                             </span>
+                                            {doc.isVerified && (
+                                                <span className="ml-1 text-xs font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                                                    ✓ Verified
+                                                </span>
+                                            )}
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="flex gap-2">
+                                            <div className="flex gap-2 flex-wrap">
                                                 {!doc.isApproved && (
                                                     <button
                                                         onClick={() => handleApproval(doc._id, true)}
@@ -209,6 +224,16 @@ const AdminDoctors = () => {
                                                         <FaTimes /> Revoke
                                                     </button>
                                                 )}
+                                                <button
+                                                    onClick={() => handleVerify(doc._id, doc.isVerified)}
+                                                    className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${doc.isVerified
+                                                        ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                        }`}
+                                                    title={doc.isVerified ? 'Remove verification badge' : 'Grant verification badge'}
+                                                >
+                                                    <FaShieldAlt /> {doc.isVerified ? 'Unverify' : 'Verify'}
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>

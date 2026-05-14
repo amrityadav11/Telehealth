@@ -83,6 +83,12 @@ const appointmentSchema = new mongoose.Schema(
         },
         cancellationReason: String,
         reminderSent: { type: Boolean, default: false },
+        // If booked for a family member instead of the patient themselves
+        bookedFor: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'FamilyMember',
+        },
+        bookedForName: String, // denormalized for quick display
     },
     { timestamps: true }
 );

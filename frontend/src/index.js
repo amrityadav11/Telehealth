@@ -23,3 +23,20 @@ root.render(
         </Provider>
     </React.StrictMode>
 );
+
+// ── PWA Service Worker Registration ──────────────────────────────────────
+if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker
+            .register('/service-worker.js')
+            .then((registration) => {
+                console.log('✅ Service Worker registered:', registration.scope);
+
+                // Check for updates every 60 seconds
+                setInterval(() => registration.update(), 60 * 1000);
+            })
+            .catch((err) => {
+                console.warn('Service Worker registration failed:', err);
+            });
+    });
+}

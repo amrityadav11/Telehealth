@@ -11,9 +11,16 @@ const messageSchema = new mongoose.Schema(
         senderRole: { type: String, enum: ['patient', 'doctor'], required: true },
         message: {
             type: String,
-            required: true,
-            maxlength: [1000, 'Message cannot exceed 1000 characters'],
+            maxlength: [2000, 'Message cannot exceed 2000 characters'],
             trim: true,
+        },
+        // Media attachment
+        media: {
+            url: String,
+            public_id: String,
+            type: { type: String, enum: ['image', 'video', 'file'] },
+            name: String,   // original filename
+            size: Number,   // bytes
         },
         readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     },
@@ -42,6 +49,7 @@ const chatSchema = new mongoose.Schema(
         lastMessage: {
             text: String,
             at: Date,
+            senderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         },
     },
     { timestamps: true }

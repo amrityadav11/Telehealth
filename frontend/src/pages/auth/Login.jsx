@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { loginUser, clearError } from '../../store/slices/authSlice';
 import {
     FaEnvelope, FaLock, FaUserMd, FaEye, FaEyeSlash,
-    FaMobileAlt, FaGoogle, FaShieldAlt, FaArrowLeft,
+    FaMobileAlt, FaGoogle, FaShieldAlt,
 } from 'react-icons/fa';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
@@ -274,7 +274,12 @@ const Login = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        dispatch(loginUser(formData));
+        dispatch(loginUser(formData)).then((result) => {
+            // If 2FA is required, redirect to the verify page
+            if (result?.payload?.twoFactorRequired) {
+                navigate('/verify-2fa', { state: { userId: result.payload.userId } });
+            }
+        });
     };
 
     return (
@@ -297,8 +302,8 @@ const Login = () => {
                                 key={id}
                                 onClick={() => setActiveTab(id)}
                                 className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all ${activeTab === id
-                                        ? 'bg-white text-blue-600 shadow-sm'
-                                        : 'text-gray-500 hover:text-gray-700'
+                                    ? 'bg-white text-blue-600 shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-700'
                                     }`}
                             >
                                 <Icon className="text-sm" />

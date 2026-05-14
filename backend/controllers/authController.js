@@ -2,6 +2,8 @@ const asyncHandler = require('express-async-handler');
 const crypto = require('crypto');
 const User = require('../models/User');
 const Doctor = require('../models/Doctor');
+const { logAudit } = require('../utils/auditLogger');
+const { sendEmail } = require('../utils/sendEmail');
 
 // Helper: send token response
 const sendTokenResponse = (user, statusCode, res) => {
@@ -58,9 +60,9 @@ const register = asyncHandler(async (req, res) => {
 
     // Try to send welcome email — never block registration if it fails
     if (
-        process.env.SMTP_HOST &&
-        process.env.SMTP_EMAIL &&
-        process.env.SMTP_PASSWORD
+        (process.env.EMAIL_HOST || process.env.SMTP_HOST) &&
+        (process.env.EMAIL_USER || process.env.SMTP_EMAIL) &&
+        (process.env.EMAIL_PASS || process.env.SMTP_PASSWORD)
     ) {
         try {
             const { sendEmail } = require('../utils/sendEmail');
@@ -99,6 +101,7 @@ const login = asyncHandler(async (req, res) => {
 
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
+        await logAudit({ actor: user, action: 'LOGIN_FAILED', details: 'Invalid password', req, status: 'failure' });
         res.status(401);
         throw new Error('Invalid email or password');
     }
@@ -108,10 +111,92 @@ const login = asyncHandler(async (req, res) => {
         throw new Error('Your account has been deactivated. Contact support.');
     }
 
+    // ── 2FA: send email OTP if enabled ───────────────────────────────────
+    if (user.twoFactorEnabled) {
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        user.twoFactorOtp = otp;
+        user.twoFactorOtpExpire = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+        await user.save({ validateBeforeSave: false });
+
+        try {
+            await sendEmail({
+                email: user.email,
+                subject: 'Your TeleHealth Login OTP',
+                template: 'loginOtp',
+                data: { name: user.name, otp },
+            });
+        } catch (err) {
+            console.error('2FA email error:', err.message);
+        }
+
+        return res.json({
+            success: true,
+            twoFactorRequired: true,
+            userId: user._id,
+            message: 'OTP sent to your email. Please verify to continue.',
+        });
+    }
+
     user.lastLogin = Date.now();
     await user.save({ validateBeforeSave: false });
 
+    await logAudit({ actor: user, action: 'LOGIN', details: 'Successful login', req });
+
     sendTokenResponse(user, 200, res);
+});
+
+// @desc    Verify 2FA OTP and complete login
+// @route   POST /api/auth/verify-2fa
+// @access  Public
+const verify2FA = asyncHandler(async (req, res) => {
+    const { userId, otp } = req.body;
+
+    if (!userId || !otp) {
+        res.status(400);
+        throw new Error('User ID and OTP are required');
+    }
+
+    const user = await User.findOne({
+        _id: userId,
+        twoFactorOtp: otp,
+        twoFactorOtpExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+        res.status(400);
+        throw new Error('Invalid or expired OTP. Please try again.');
+    }
+
+    user.twoFactorOtp = undefined;
+    user.twoFactorOtpExpire = undefined;
+    user.lastLogin = Date.now();
+    await user.save({ validateBeforeSave: false });
+
+    await logAudit({ actor: user, action: 'LOGIN_2FA', details: '2FA verified successfully', req });
+
+    sendTokenResponse(user, 200, res);
+});
+
+// @desc    Toggle 2FA for current user
+// @route   PUT /api/auth/toggle-2fa
+// @access  Private
+const toggle2FA = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id);
+    user.twoFactorEnabled = !user.twoFactorEnabled;
+    await user.save({ validateBeforeSave: false });
+
+    await logAudit({
+        actor: user,
+        action: user.twoFactorEnabled ? 'ENABLE_2FA' : 'DISABLE_2FA',
+        details: `2FA ${user.twoFactorEnabled ? 'enabled' : 'disabled'}`,
+        req,
+    });
+
+    res.json({
+        success: true,
+        twoFactorEnabled: user.twoFactorEnabled,
+        message: `Two-factor authentication ${user.twoFactorEnabled ? 'enabled' : 'disabled'}`,
+    });
 });
 
 // @desc    Get current user
@@ -272,6 +357,8 @@ const updateProfile = asyncHandler(async (req, res) => {
 module.exports = {
     register,
     login,
+    verify2FA,
+    toggle2FA,
     getMe,
     updatePassword,
     forgotPassword,

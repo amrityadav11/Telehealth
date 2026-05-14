@@ -6,6 +6,7 @@ import { bookAppointment } from '../../store/slices/appointmentSlice';
 import { PageSpinner } from '../../components/common/Spinner';
 import Spinner from '../../components/common/Spinner';
 import PaymentModal from '../../components/payment/PaymentModal';
+import AvailabilityCalendar from '../../components/doctors/AvailabilityCalendar';
 import { FaCalendarAlt, FaClock, FaDollarSign, FaVideo, FaCheckCircle, FaLock } from 'react-icons/fa';
 import { format, addDays } from 'date-fns';
 
@@ -184,65 +185,51 @@ const BookAppointment = () => {
 
                     {/* Booking Form */}
                     <div className="lg:col-span-2 space-y-6">
-                        {/* Date Selection */}
+                        {/* Date + Slot Selection — Visual Calendar */}
                         <div className="card">
                             <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                                <FaCalendarAlt className="text-blue-500" /> Select Date
+                                <FaCalendarAlt className="text-blue-500" /> Select Date & Time
                             </h2>
-                            <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
-                                {availableDates.map((date) => {
-                                    const d = new Date(date);
-                                    const isSelected = selectedDate === date;
-                                    return (
-                                        <button
-                                            key={date}
-                                            onClick={() => setSelectedDate(date)}
-                                            className={`p-2 rounded-lg text-center text-sm transition-all ${isSelected
-                                                    ? 'bg-blue-600 text-white'
-                                                    : 'border border-gray-200 hover:border-blue-400 hover:bg-blue-50'
-                                                }`}
-                                        >
-                                            <div className="font-medium">{format(d, 'EEE')}</div>
-                                            <div className={isSelected ? 'text-blue-100' : 'text-gray-500'}>
-                                                {format(d, 'MMM d')}
-                                            </div>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        {/* Time Slots */}
-                        {selectedDate && (
-                            <div className="card">
-                                <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                                    <FaClock className="text-blue-500" /> Select Time Slot
-                                </h2>
-                                {slotsLoading ? (
-                                    <div className="py-8"><Spinner /></div>
-                                ) : availableSlots.length === 0 ? (
-                                    <p className="text-gray-500 text-sm py-4">No slots available for this date.</p>
-                                ) : (
-                                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                            <AvailabilityCalendar
+                                availability={doctor?.availability || []}
+                                onSelectSlot={(date, slot) => {
+                                    setSelectedDate(format(date, 'yyyy-MM-dd'));
+                                    setSelectedSlot(slot);
+                                    // Also fetch real-time booked slots
+                                    dispatch(fetchAvailableSlots({ doctorId, date: format(date, 'yyyy-MM-dd') }));
+                                }}
+                            />
+                            {/* Show booked-out slots from API on top of calendar selection */}
+                            {selectedDate && slotsLoading && (
+                                <div className="mt-3 flex items-center gap-2 text-sm text-gray-500">
+                                    <Spinner size="sm" /> Checking availability...
+                                </div>
+                            )}
+                            {selectedDate && !slotsLoading && availableSlots.length > 0 && (
+                                <div className="mt-4 border-t border-gray-100 pt-4">
+                                    <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
+                                        <FaClock className="text-blue-400" /> Real-time availability (grey = already booked)
+                                    </p>
+                                    <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5">
                                         {availableSlots.map((slot, idx) => (
                                             <button
                                                 key={idx}
                                                 onClick={() => !slot.isBooked && setSelectedSlot(slot)}
                                                 disabled={slot.isBooked}
-                                                className={`py-2 px-3 rounded-lg text-sm font-medium transition-all ${slot.isBooked
-                                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed line-through'
-                                                        : selectedSlot?.startTime === slot.startTime
-                                                            ? 'bg-blue-600 text-white'
-                                                            : 'border border-gray-200 hover:border-blue-400 hover:bg-blue-50 text-gray-700'
+                                                className={`py-1.5 px-2 rounded-lg text-xs font-medium transition-all ${slot.isBooked
+                                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed line-through'
+                                                    : selectedSlot?.startTime === slot.startTime
+                                                        ? 'bg-blue-600 text-white shadow-sm'
+                                                        : 'border border-gray-200 hover:border-blue-400 hover:bg-blue-50 text-gray-700'
                                                     }`}
                                             >
                                                 {slot.startTime}
                                             </button>
                                         ))}
                                     </div>
-                                )}
-                            </div>
-                        )}
+                                </div>
+                            )}
+                        </div>
 
                         {/* Symptoms */}
                         <div className="card">

@@ -17,6 +17,11 @@ export const markAllRead = createAsyncThunk('notifications/markAllRead', async (
     await api.put('/notifications/read-all');
 });
 
+export const markOneRead = createAsyncThunk('notifications/markOneRead', async (index) => {
+    await api.put(`/notifications/${index}/read`);
+    return index;
+});
+
 const notificationSlice = createSlice({
     name: 'notifications',
     initialState: {
@@ -43,6 +48,14 @@ const notificationSlice = createSlice({
         builder.addCase(markAllRead.fulfilled, (state) => {
             state.notifications = state.notifications.map((n) => ({ ...n, isRead: true }));
             state.unreadCount = 0;
+        });
+
+        builder.addCase(markOneRead.fulfilled, (state, action) => {
+            const idx = action.payload;
+            if (state.notifications[idx]) {
+                state.notifications[idx].isRead = true;
+                state.unreadCount = Math.max(0, state.unreadCount - 1);
+            }
         });
     },
 });

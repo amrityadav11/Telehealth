@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Doctor = require('../models/Doctor');
 const Appointment = require('../models/Appointment');
 const Review = require('../models/Review');
+const { logAudit } = require('../utils/auditLogger');
 
 // @desc    Create a new admin account
 // @route   POST /api/admin/create-admin
@@ -95,22 +96,32 @@ const changeUserRole = asyncHandler(async (req, res) => {
 // @route   GET /api/admin/stats
 // @access  Private (Admin)
 const getDashboardStats = asyncHandler(async (req, res) => {
+    const AuditLog = require('../models/AuditLog');
+
     const [
         totalUsers,
         totalDoctors,
         totalPatients,
         pendingDoctors,
+        totalDoctorsAll,
         totalAppointments,
         pendingAppointments,
         completedAppointments,
+        cancelledAppointments,
+        totalLogins,
+        totalLogouts,
     ] = await Promise.all([
         User.countDocuments({ isActive: true }),
         Doctor.countDocuments({ isApproved: true }),
         User.countDocuments({ role: 'patient', isActive: true }),
         Doctor.countDocuments({ isApproved: false }),
+        Doctor.countDocuments(),
         Appointment.countDocuments(),
         Appointment.countDocuments({ status: 'pending' }),
         Appointment.countDocuments({ status: 'completed' }),
+        Appointment.countDocuments({ status: 'cancelled' }),
+        AuditLog.countDocuments({ action: { $in: ['LOGIN', 'LOGIN_2FA'] }, status: 'success' }),
+        AuditLog.countDocuments({ action: 'LOGOUT', status: 'success' }),
     ]);
 
     // Total revenue
@@ -140,6 +151,12 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         { $sort: { '_id.year': 1, '_id.month': 1 } },
     ]);
 
+    // Recent audit logs (last 10)
+    const recentAuditLogs = await AuditLog.find()
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .select('actorName actorRole action details status createdAt');
+
     // Recent appointments
     const recentAppointments = await Appointment.find()
         .populate('patient', 'name email')
@@ -152,13 +169,18 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         stats: {
             totalUsers,
             totalDoctors,
+            totalDoctorsAll,
             totalPatients,
             pendingDoctors,
             totalAppointments,
             pendingAppointments,
             completedAppointments,
+            cancelledAppointments,
             totalRevenue,
+            totalLogins,
+            totalLogouts,
             monthlyStats,
+            recentAuditLogs,
             recentAppointments,
         },
     });
@@ -255,6 +277,18 @@ const updateDoctorApproval = asyncHandler(async (req, res) => {
     doctorUser.addNotification(message, 'system');
     await doctorUser.save({ validateBeforeSave: false });
 
+    // Audit log
+    await logAudit({
+        actor: req.user,
+        action: isApproved ? 'APPROVE_DOCTOR' : 'REJECT_DOCTOR',
+        resource: 'doctor',
+        resourceId: doctor._id,
+        details: isApproved
+            ? `Approved Dr. ${doctor.user.name}`
+            : `Rejected Dr. ${doctor.user.name}: ${rejectionReason || 'No reason'}`,
+        req,
+    });
+
     // Send email
     try {
         const { sendEmail } = require('../utils/sendEmail');
@@ -288,6 +322,15 @@ const toggleUserStatus = asyncHandler(async (req, res) => {
 
     user.isActive = !user.isActive;
     await user.save({ validateBeforeSave: false });
+
+    await logAudit({
+        actor: req.user,
+        action: user.isActive ? 'ACTIVATE_USER' : 'DEACTIVATE_USER',
+        resource: 'user',
+        resourceId: user._id,
+        details: `${user.isActive ? 'Activated' : 'Deactivated'} user: ${user.name} (${user.email})`,
+        req,
+    });
 
     res.json({
         success: true,

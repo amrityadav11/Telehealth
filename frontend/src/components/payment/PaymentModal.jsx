@@ -110,8 +110,8 @@ const ReceiptScreen = ({ appointment, onClose }) => (
     </div>
 );
 
-// ── Card Tab (Stripe real or mock) ─────────────────────────────────────────
-const CardTab = ({ appointment, amount, onSuccess }) => {
+// ── Card Tab — Real Stripe (must be inside <Elements>) ────────────────────
+const StripeCardTab = ({ appointment, amount, onSuccess }) => {
     const stripe = useStripe();
     const elements = useElements();
     const [loading, setLoading] = useState(false);
@@ -127,14 +127,6 @@ const CardTab = ({ appointment, amount, onSuccess }) => {
                 appointmentId: appointment._id,
             });
 
-            // Mock mode
-            if (data.mock) {
-                toast.success('Payment processed successfully!');
-                onSuccess(data.appointment || appointment);
-                return;
-            }
-
-            // Real Stripe
             if (!stripe || !elements) {
                 setCardError('Stripe is not loaded. Please refresh and try again.');
                 return;
@@ -176,17 +168,9 @@ const CardTab = ({ appointment, amount, onSuccess }) => {
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Card Number
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Card Number</label>
                 <div className="border border-gray-300 rounded-xl p-3.5 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 transition-all bg-white">
-                    {stripePromise ? (
-                        <CardElement options={CARD_ELEMENT_OPTIONS} />
-                    ) : (
-                        <div className="text-sm text-gray-500 py-0.5">
-                            <span className="font-medium text-gray-700">Test Mode:</span> Payment will be processed as mock
-                        </div>
-                    )}
+                    <CardElement options={CARD_ELEMENT_OPTIONS} />
                 </div>
                 {cardError && (
                     <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
@@ -194,17 +178,65 @@ const CardTab = ({ appointment, amount, onSuccess }) => {
                     </p>
                 )}
             </div>
-
-            {!stripePromise && (
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
-                    <strong>Development Mode:</strong> Stripe is not configured. Clicking "Pay" will simulate a successful payment.
-                </div>
-            )}
-
             <div className="flex items-center gap-2 text-xs text-gray-400">
                 <FaLock /> <span>256-bit SSL encrypted · Secured by Stripe</span>
             </div>
+            <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white py-3 rounded-xl font-semibold transition-colors"
+            >
+                {loading ? <><Spinner size="sm" /> Processing...</> : <><FaLock /> Pay ₹{amount}</>}
+            </button>
+        </form>
+    );
+};
 
+// ── Card Tab — Mock / dev mode (no Stripe, no useStripe hook) ──────────────
+const MockCardTab = ({ appointment, amount, onSuccess }) => {
+    const [loading, setLoading] = useState(false);
+    const [cardError, setCardError] = useState('');
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setCardError('');
+        try {
+            const { data } = await api.post('/payments/create-intent', {
+                appointmentId: appointment._id,
+            });
+            toast.success('Payment processed successfully!');
+            onSuccess(data.appointment || appointment);
+        } catch (err) {
+            const msg = err.response?.data?.message || 'Payment failed. Please try again.';
+            setCardError(msg);
+            toast.error(msg);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Card Number</label>
+                <div className="border border-gray-300 rounded-xl p-3.5 bg-white">
+                    <div className="text-sm text-gray-500 py-0.5">
+                        <span className="font-medium text-gray-700">Test Mode:</span> Payment will be processed as mock
+                    </div>
+                </div>
+                {cardError && (
+                    <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                        <FaTimes className="text-xs" /> {cardError}
+                    </p>
+                )}
+            </div>
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
+                <strong>Development Mode:</strong> Stripe is not configured. Clicking "Pay" will simulate a successful payment.
+            </div>
+            <div className="flex items-center gap-2 text-xs text-gray-400">
+                <FaLock /> <span>256-bit SSL encrypted · Secured by Stripe</span>
+            </div>
             <button
                 type="submit"
                 disabled={loading}
@@ -444,8 +476,8 @@ const PaymentContent = ({ appointment, amount, onSuccess, onClose }) => {
                         key={id}
                         onClick={() => setActiveTab(id)}
                         className={`flex-1 flex flex-col items-center gap-1 py-2 rounded-lg text-xs font-medium transition-all ${activeTab === id
-                                ? 'bg-white text-blue-600 shadow-sm'
-                                : 'text-gray-500 hover:text-gray-700'
+                            ? 'bg-white text-blue-600 shadow-sm'
+                            : 'text-gray-500 hover:text-gray-700'
                             }`}
                     >
                         <Icon className="text-base" />
@@ -459,10 +491,10 @@ const PaymentContent = ({ appointment, amount, onSuccess, onClose }) => {
                 {activeTab === 'card' && (
                     stripePromise ? (
                         <Elements stripe={stripePromise}>
-                            <CardTab appointment={appointment} amount={amount} onSuccess={handleSuccess} />
+                            <StripeCardTab appointment={appointment} amount={amount} onSuccess={handleSuccess} />
                         </Elements>
                     ) : (
-                        <CardTab appointment={appointment} amount={amount} onSuccess={handleSuccess} />
+                        <MockCardTab appointment={appointment} amount={amount} onSuccess={handleSuccess} />
                     )
                 )}
                 {activeTab === 'upi' && (

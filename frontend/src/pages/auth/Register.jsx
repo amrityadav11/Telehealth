@@ -21,7 +21,11 @@ const Register = () => {
     const [passwordError, setPasswordError] = useState('');
 
     useEffect(() => {
-        if (user) navigate('/dashboard');
+        if (user) {
+            if (user.role === 'admin') navigate('/admin/dashboard', { replace: true });
+            else if (user.role === 'doctor') navigate('/doctor/dashboard', { replace: true });
+            else navigate('/patient/dashboard', { replace: true });
+        }
         return () => dispatch(clearError());
     }, [user, navigate, dispatch]);
 

@@ -6,9 +6,11 @@ import { PageSpinner } from '../../components/common/Spinner';
 import StarRating from '../../components/common/StarRating';
 import {
     FaUserMd, FaClock, FaDollarSign, FaPhone, FaGraduationCap,
-    FaLanguage, FaHospital, FaCalendarAlt, FaVideo, FaStar
+    FaLanguage, FaHospital, FaCalendarAlt, FaVideo, FaStar,
+    FaCheckCircle, FaShieldAlt, FaIdCard,
 } from 'react-icons/fa';
 import api from '../../services/api';
+import AvailabilityCalendar from '../../components/doctors/AvailabilityCalendar';
 
 const DoctorProfile = () => {
     const { id } = useParams();
@@ -35,7 +37,7 @@ const DoctorProfile = () => {
     if (loading || !doctor) return <PageSpinner />;
 
     const { user: docUser, specialization, category, experience, consultationFee, bio,
-        education, availability, languages, hospitalAffiliation, rating, numReviews, isOnline } = doctor;
+        education, availability, languages, hospitalAffiliation, rating, numReviews, isOnline, isVerified, licenseNumber } = doctor;
 
     return (
         <div className="max-w-5xl mx-auto px-4 py-8">
@@ -53,11 +55,37 @@ const DoctorProfile = () => {
                                 <span className="absolute bottom-1 right-1 w-5 h-5 bg-green-500 border-2 border-white rounded-full" />
                             )}
                         </div>
-                        <h1 className="text-xl font-bold text-gray-900">{docUser?.name}</h1>
+                        <div className="flex items-center justify-center gap-2 mb-1">
+                            <h1 className="text-xl font-bold text-gray-900">{docUser?.name}</h1>
+                            {isVerified && (
+                                <span
+                                    className="inline-flex items-center justify-center w-5 h-5 bg-blue-600 rounded-full flex-shrink-0"
+                                    title="Verified Doctor"
+                                >
+                                    <FaCheckCircle className="text-white text-sm" />
+                                </span>
+                            )}
+                        </div>
                         <p className="text-blue-600 font-medium">{specialization}</p>
                         <span className="inline-block bg-blue-50 text-blue-700 text-sm px-3 py-1 rounded-full mt-1">
                             {category}
                         </span>
+
+                        {/* Verified Badge */}
+                        {isVerified && (
+                            <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                <div className="flex items-center justify-center gap-2 text-blue-700 font-semibold text-sm">
+                                    <FaShieldAlt className="text-blue-600" />
+                                    <span>Verified Doctor</span>
+                                </div>
+                                {licenseNumber && (
+                                    <div className="flex items-center justify-center gap-1 text-xs text-blue-600 mt-1">
+                                        <FaIdCard />
+                                        <span>License: {licenseNumber}</span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         <div className="flex items-center justify-center gap-2 mt-3">
                             <StarRating rating={rating} size="md" />
@@ -124,6 +152,28 @@ const DoctorProfile = () => {
                         </div>
                     )}
 
+                    {/* Verified by TeleHealth */}
+                    {isVerified && (
+                        <div className="card bg-blue-50 border border-blue-200">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <FaShieldAlt className="text-white" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-blue-900 text-sm">Verified by TeleHealth</h3>
+                                    <p className="text-blue-700 text-xs mt-0.5">
+                                        This doctor's credentials and license have been manually verified by our medical team.
+                                    </p>
+                                    {licenseNumber && (
+                                        <p className="text-blue-600 text-xs mt-1 flex items-center gap-1">
+                                            <FaIdCard /> License No: <strong>{licenseNumber}</strong>
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Education */}
                     {education?.length > 0 && (
                         <div className="card">
@@ -144,20 +194,13 @@ const DoctorProfile = () => {
                         </div>
                     )}
 
-                    {/* Availability */}
+                    {/* Availability — Visual Calendar */}
                     {availability?.length > 0 && (
                         <div className="card">
-                            <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                                 <FaCalendarAlt className="text-blue-500" /> Availability
                             </h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                {availability.filter((a) => a.isAvailable).map((slot, idx) => (
-                                    <div key={idx} className="flex items-center justify-between bg-green-50 rounded-lg px-3 py-2 text-sm">
-                                        <span className="font-medium text-gray-800">{slot.day}</span>
-                                        <span className="text-gray-600">{slot.startTime} – {slot.endTime}</span>
-                                    </div>
-                                ))}
-                            </div>
+                            <AvailabilityCalendar availability={availability} readOnly={true} />
                         </div>
                     )}
 

@@ -12,6 +12,7 @@ const path = require('path');
 dotenv.config();
 
 const connectDB = require('./config/db');
+const passport = require('./config/passport');
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
 const { initSocket } = require('./socket/socketHandler');
 
@@ -25,9 +26,18 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const chatRoutes = require('./routes/chatRoutes');
+const medicalRecordRoutes = require('./routes/medicalRecordRoutes');
+const labTestRoutes = require('./routes/labTestRoutes');
+const healthVitalRoutes = require('./routes/healthVitalRoutes');
+const payoutRoutes = require('./routes/payoutRoutes');
+const familyRoutes = require('./routes/familyRoutes');
 
 // Connect to database
 connectDB();
+
+// Start reminder cron job
+const { startReminderCron } = require('./utils/reminderCron');
+startReminderCron();
 
 const app = express();
 const server = http.createServer(app);
@@ -85,6 +95,9 @@ app.options('*', cors(corsOptions)); // preflight
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Passport (no session needed — we use JWT)
+app.use(passport.initialize());
+
 // Dev logging
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
@@ -112,6 +125,11 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/medical-records', medicalRecordRoutes);
+app.use('/api/lab-tests', labTestRoutes);
+app.use('/api/health-vitals', healthVitalRoutes);
+app.use('/api/payouts', payoutRoutes);
+app.use('/api/family', familyRoutes);
 
 // Error handling
 app.use(notFound);

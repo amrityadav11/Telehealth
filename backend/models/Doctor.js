@@ -118,6 +118,12 @@ const doctorSchema = new mongoose.Schema(
             type: String,
             required: [true, 'License number is required'],
         },
+        // Verification badge — set by admin after manual license verification
+        isVerified: {
+            type: Boolean,
+            default: false,
+        },
+        verifiedAt: Date,
     },
     { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );

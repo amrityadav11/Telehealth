@@ -57,6 +57,10 @@ const userSchema = new mongoose.Schema(
         phoneOtpExpire: Date,
         // Google OAuth
         googleId: String,
+        // Two-Factor Authentication (email OTP)
+        twoFactorEnabled: { type: Boolean, default: false },
+        twoFactorOtp: String,
+        twoFactorOtpExpire: Date,
         notifications: [
             {
                 message: String,
@@ -76,7 +80,8 @@ const userSchema = new mongoose.Schema(
 
 // Hash password before saving
 userSchema.pre('save', async function (next) {
-    if (!this.isModified('password')) return next();
+    // Skip if password not modified OR if password is undefined (Google OAuth users)
+    if (!this.isModified('password') || !this.password) return next();
     const salt = await bcrypt.genSalt(12);
     this.password = await bcrypt.hash(this.password, salt);
     next();

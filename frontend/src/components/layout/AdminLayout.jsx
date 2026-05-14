@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { NavLink, useNavigate, Outlet } from 'react-router-dom';
+import { NavLink, useNavigate, Outlet, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
 import {
     FaTachometerAlt, FaUserMd, FaUsers, FaCalendarAlt,
     FaSignOutAlt, FaBars, FaTimes, FaUserShield, FaStar,
+    FaUserCircle, FaClipboardList, FaChartLine, FaMoneyBillWave,
 } from 'react-icons/fa';
 
 const navItems = [
@@ -13,7 +14,11 @@ const navItems = [
     { to: '/admin/users', icon: FaUsers, label: 'Users' },
     { to: '/admin/appointments', icon: FaCalendarAlt, label: 'Appointments' },
     { to: '/admin/reviews', icon: FaStar, label: 'Reviews' },
+    { to: '/admin/analytics', icon: FaChartLine, label: 'Analytics' },
+    { to: '/admin/payouts', icon: FaMoneyBillWave, label: 'Payouts' },
     { to: '/admin/create-admin', icon: FaUserShield, label: 'Create Admin' },
+    { to: '/admin/profile', icon: FaUserCircle, label: 'My Profile' },
+    { to: '/admin/audit-logs', icon: FaClipboardList, label: 'Audit Logs' },
 ];
 
 const AdminLayout = () => {
@@ -62,17 +67,17 @@ const AdminLayout = () => {
 
             {/* User + Logout */}
             <div className="px-4 py-4 border-t border-gray-700">
-                <div className="flex items-center gap-3 mb-3">
+                <Link to="/admin/profile" className="flex items-center gap-3 mb-3 hover:bg-gray-800 rounded-lg px-2 py-1.5 transition-colors">
                     <img
                         src={user?.avatar?.url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'A')}&background=2563eb&color=fff&size=36`}
                         alt={user?.name}
-                        className="w-9 h-9 rounded-full"
+                        className="w-9 h-9 rounded-full flex-shrink-0"
                     />
                     <div className="min-w-0">
                         <p className="text-sm font-medium text-white truncate">{user?.name}</p>
                         <p className="text-xs text-gray-400">Administrator</p>
                     </div>
-                </div>
+                </Link>
                 <button
                     onClick={handleLogout}
                     className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-800 hover:text-red-300 rounded-lg transition-colors"

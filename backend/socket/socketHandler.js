@@ -3,7 +3,13 @@ const User = require('../models/User');
 
 // Track active rooms and users
 const activeRooms = new Map(); // roomId -> { doctor, patient, peers }
-const userSockets = new Map(); // userId -> socketId
+const userSockets = new Map(); // userId -> Set of socketIds (multi-tab support)
+
+// Export so routes can query online status
+const isUserOnline = (userId) => {
+    const sockets = userSockets.get(userId.toString());
+    return sockets ? sockets.size > 0 : false;
+};
 
 const initSocket = (io) => {
     // Auth middleware for socket
@@ -25,12 +31,18 @@ const initSocket = (io) => {
 
     io.on('connection', (socket) => {
         const userId = socket.user._id.toString();
-        userSockets.set(userId, socket.id);
+
+        // Multi-tab: track all socket IDs per user
+        if (!userSockets.has(userId)) userSockets.set(userId, new Set());
+        userSockets.get(userId).add(socket.id);
 
         console.log(`🔌 User connected: ${socket.user.name} (${socket.user.role})`);
 
         // Join personal room for notifications
         socket.join(`${socket.user.role}_${userId}`);
+
+        // Broadcast online status to all chat rooms this user is in
+        socket.broadcast.emit('user_online', { userId });
 
         // ─── Video Consultation Events ───────────────────────────────────────
 
@@ -95,7 +107,7 @@ const initSocket = (io) => {
             });
         });
 
-        // ─── Chat Events ─────────────────────────────────────────────────────
+        // ─── Chat Events (video room) ─────────────────────────────────────────
 
         socket.on('send_message', ({ roomId, message, appointmentId }) => {
             const msgData = {
@@ -110,7 +122,7 @@ const initSocket = (io) => {
             io.to(roomId).emit('receive_message', msgData);
         });
 
-        // ─── Typing indicator ────────────────────────────────────────────────
+        // ─── Typing indicator (video room) ───────────────────────────────────
 
         socket.on('typing', ({ roomId }) => {
             socket.to(roomId).emit('user_typing', { userId, name: socket.user.name });
@@ -118,6 +130,80 @@ const initSocket = (io) => {
 
         socket.on('stop_typing', ({ roomId }) => {
             socket.to(roomId).emit('user_stop_typing', { userId });
+        });
+
+        // ─── Persistent Chat (appointment-based) ─────────────────────────────
+
+        socket.on('join_chat', ({ appointmentId }) => {
+            socket.join(`chat_${appointmentId}`);
+        });
+
+        socket.on('leave_chat', ({ appointmentId }) => {
+            socket.leave(`chat_${appointmentId}`);
+        });
+
+        socket.on('send_chat_message', async ({ appointmentId, message }) => {
+            if (!message?.trim()) return;
+            try {
+                const Chat = require('../models/Chat');
+                const Appointment = require('../models/Appointment');
+
+                const appt = await Appointment.findById(appointmentId).populate('doctor', 'user');
+                if (!appt) return;
+
+                const patientId = appt.patient.toString();
+                const doctorUserId = appt.doctor?.user?.toString();
+                if (userId !== patientId && userId !== doctorUserId) return;
+
+                let chat = await Chat.findOne({ appointment: appointmentId });
+                if (!chat) {
+                    chat = await Chat.create({
+                        appointment: appointmentId,
+                        doctor: doctorUserId,
+                        patient: patientId,
+                        messages: [],
+                    });
+                }
+
+                const newMsg = {
+                    senderId: socket.user._id,
+                    senderName: socket.user.name,
+                    senderRole: socket.user.role,
+                    message: message.trim(),
+                    readBy: [socket.user._id],
+                };
+
+                chat.messages.push(newMsg);
+                chat.lastMessage = { text: message.trim(), at: new Date() };
+                await chat.save();
+
+                const savedMsg = chat.messages[chat.messages.length - 1];
+                io.to(`chat_${appointmentId}`).emit('receive_chat_message', {
+                    ...savedMsg.toObject(),
+                    appointmentId,
+                });
+            } catch (err) {
+                console.error('Chat socket error:', err.message);
+            }
+        });
+
+        socket.on('chat_typing', ({ appointmentId }) => {
+            socket.to(`chat_${appointmentId}`).emit('chat_user_typing', { userId, name: socket.user.name });
+        });
+
+        socket.on('chat_stop_typing', ({ appointmentId }) => {
+            socket.to(`chat_${appointmentId}`).emit('chat_user_stop_typing', { userId });
+        });
+
+        // ─── Online status check ─────────────────────────────────────────────
+
+        socket.on('check_online', ({ userIds }) => {
+            const statuses = {};
+            (userIds || []).forEach((id) => {
+                const sockets = userSockets.get(id.toString());
+                statuses[id] = sockets ? sockets.size > 0 : false;
+            });
+            socket.emit('online_statuses', statuses);
         });
 
         // ─── Leave room ──────────────────────────────────────────────────────
@@ -136,7 +222,16 @@ const initSocket = (io) => {
         // ─── Disconnect ──────────────────────────────────────────────────────
 
         socket.on('disconnect', () => {
-            userSockets.delete(userId);
+            // Multi-tab: only remove this specific socket
+            const sockets = userSockets.get(userId);
+            if (sockets) {
+                sockets.delete(socket.id);
+                if (sockets.size === 0) {
+                    userSockets.delete(userId);
+                    // Broadcast offline only when truly no sockets remain
+                    socket.broadcast.emit('user_offline', { userId });
+                }
+            }
 
             // Remove from all active rooms
             activeRooms.forEach((room, roomId) => {
@@ -153,4 +248,4 @@ const initSocket = (io) => {
     });
 };
 
-module.exports = { initSocket };
+module.exports = { initSocket, isUserOnline, userSockets };

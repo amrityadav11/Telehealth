@@ -1,0 +1,84 @@
+{
+    "short_name": "TeleHealth",
+    "name": "TeleHealth - Doctor Appointment & Telemedicine",
+    "description": "Book doctor appointments and video consultations online.",
+    "icons": [
+        {
+            "src": "favicon.ico",
+            "sizes": "64x64 32x32 24x24 16x16",
+            "type": "image/x-icon"
+        },
+        {
+            "src": "logo192.svg",
+            "type": "image/svg+xml",
+            "sizes": "192x192",
+            "purpose": "any"
+        },
+        {
+            "src": "logo512.svg",
+            "type": "image/svg+xml",
+            "sizes": "512x512",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "logo192.png",
+            "type": "image/png",
+            "sizes": "192x192",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "logo512.png",
+            "type": "image/png",
+            "sizes": "512x512",
+            "purpose": "any maskable"
+        }
+    ],
+    "start_url": "/",
+    "display": "standalone",
+    "theme_color": "#2563eb",
+    "background_color": "#ffffff",
+    "orientation": "portrait-primary",
+    "categories": [
+        "health",
+        "medical",
+        "lifestyle"
+    ],
+    "shortcuts": [
+        {
+            "name": "Find Doctors",
+            "short_name": "Doctors",
+            "description": "Browse and find doctors",
+            "url": "/doctors",
+            "icons": [
+                {
+                    "src": "favicon.ico",
+                    "sizes": "64x64"
+                }
+            ]
+        },
+        {
+            "name": "My Appointments",
+            "short_name": "Appointments",
+            "description": "View your appointments",
+            "url": "/patient/appointments",
+            "icons": [
+                {
+                    "src": "favicon.ico",
+                    "sizes": "64x64"
+                }
+            ]
+        },
+        {
+            "name": "AI Symptom Checker",
+            "short_name": "AI Checker",
+            "description": "Check your symptoms with AI",
+            "url": "/symptom-checker",
+            "icons": [
+                {
+                    "src": "favicon.ico",
+                    "sizes": "64x64"
+                }
+            ]
+        }
+    ]
+}

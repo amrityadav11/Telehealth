@@ -8,6 +8,7 @@
         "@stripe/stripe-js": "^3.0.0",
         "axios": "^1.6.2",
         "date-fns": "^3.0.6",
+        "emoji-picker-react": "^4.19.1",
         "jspdf": "^4.2.1",
         "jspdf-autotable": "^5.0.7",
         "react": "^18.2.0",

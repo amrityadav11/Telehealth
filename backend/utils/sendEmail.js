@@ -1,12 +1,17 @@
 const nodemailer = require('nodemailer');
 
 const createTransporter = () => {
+  const port = parseInt(process.env.EMAIL_PORT || process.env.SMTP_PORT || '587', 10);
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
+    host: process.env.EMAIL_HOST || process.env.SMTP_HOST,
+    port,
+    secure: port === 465, // true for 465 (SSL), false for 587 (STARTTLS)
     auth: {
-      user: process.env.SMTP_EMAIL,
-      pass: process.env.SMTP_PASSWORD,
+      user: process.env.EMAIL_USER || process.env.SMTP_EMAIL,
+      pass: process.env.EMAIL_PASS || process.env.SMTP_PASSWORD,
+    },
+    tls: {
+      rejectUnauthorized: false, // allow self-signed certs in dev
     },
   });
 };
@@ -184,6 +189,26 @@ const templates = {
       </div>
     `,
   }),
+
+  loginOtp: ({ name, otp }) => ({
+    subject: 'Your TeleHealth Login OTP',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;">
+        <div style="background: #2563eb; padding: 24px; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 24px;">🔐 Login Verification</h1>
+        </div>
+        <div style="padding: 24px;">
+          <p>Hi <strong>${name}</strong>,</p>
+          <p>Your one-time login code is:</p>
+          <div style="background:#eff6ff;border:2px dashed #2563eb;border-radius:12px;padding:24px;text-align:center;margin:20px 0;">
+            <span style="font-size:40px;font-weight:bold;letter-spacing:12px;color:#1d4ed8;">${otp}</span>
+          </div>
+          <p style="color:#6b7280;font-size:14px;">This code expires in <strong>10 minutes</strong>. Do not share it with anyone.</p>
+          <p style="color:#6b7280;font-size:14px;">If you didn't request this, please ignore this email or contact support.</p>
+        </div>
+      </div>
+    `,
+  }),
 };
 
 const sendEmail = async ({ email, subject, template, data, html }) => {
@@ -198,8 +223,11 @@ const sendEmail = async ({ email, subject, template, data, html }) => {
     emailSubject = rendered.subject;
   }
 
+  const fromName = process.env.EMAIL_FROM || process.env.FROM_NAME || 'TeleHealth';
+  const fromEmail = process.env.EMAIL_USER || process.env.FROM_EMAIL;
+
   const mailOptions = {
-    from: `"${process.env.FROM_NAME || 'TeleHealth'}" <${process.env.FROM_EMAIL}>`,
+    from: `"${fromName}" <${fromEmail}>`,
     to: email,
     subject: emailSubject,
     html: emailHtml,

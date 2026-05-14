@@ -1,10 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaStar, FaClock, FaDollarSign, FaUserMd, FaVideo } from 'react-icons/fa';
+import { FaStar, FaClock, FaDollarSign, FaUserMd, FaVideo, FaCheckCircle } from 'react-icons/fa';
 import StarRating from '../common/StarRating';
 
 const DoctorCard = ({ doctor }) => {
-    const { user, specialization, category, experience, consultationFee, rating, numReviews, isOnline } = doctor;
+    const { user, specialization, category, experience, consultationFee, rating, numReviews, isOnline, isVerified } = doctor;
 
     return (
         <div className="card hover:shadow-md transition-shadow duration-200 group">
@@ -25,8 +25,17 @@ const DoctorCard = ({ doctor }) => {
                 <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                         <div>
-                            <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                            <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors flex items-center gap-1.5 flex-wrap">
                                 {user?.name}
+                                {isVerified && (
+                                    <span
+                                        className="inline-flex items-center justify-center w-4 h-4 bg-blue-600 rounded-full flex-shrink-0"
+                                        title="Verified Doctor"
+                                        aria-label="Verified Doctor"
+                                    >
+                                        <FaCheckCircle className="text-white text-xs" />
+                                    </span>
+                                )}
                             </h3>
                             <p className="text-blue-600 text-sm font-medium">{specialization}</p>
                             <span className="inline-block bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded-full mt-1">

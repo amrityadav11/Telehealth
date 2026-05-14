@@ -5,11 +5,12 @@ import { fetchDoctorAppointments, updateAppointmentStatus } from '../../store/sl
 import StatusBadge from '../../components/common/StatusBadge';
 import Pagination from '../../components/common/Pagination';
 import Spinner from '../../components/common/Spinner';
-import ChatModal from '../../components/chat/ChatModal';
 import { format } from 'date-fns';
-import { FaCheck, FaTimes, FaVideo, FaPlay, FaStop, FaComments } from 'react-icons/fa';
+import { FaCheck, FaTimes, FaVideo, FaPlay, FaStop, FaComments, FaFilePdf, FaHeartbeat } from 'react-icons/fa';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import PrescriptionPDF from '../../components/appointments/PrescriptionPDF';
+import PatientHealthPanel from '../../components/doctors/PatientHealthPanel';
 
 const DoctorAppointments = () => {
     const dispatch = useDispatch();
@@ -17,7 +18,7 @@ const DoctorAppointments = () => {
     const [statusFilter, setStatusFilter] = useState('');
     const [prescriptionModal, setPrescriptionModal] = useState(null);
     const [prescription, setPrescription] = useState({ medicines: [], instructions: '' });
-    const [chatAppointment, setChatAppointment] = useState(null);
+    const [healthPanelPatient, setHealthPanelPatient] = useState(null);
 
     useEffect(() => {
         dispatch(fetchDoctorAppointments({ status: statusFilter, page: 1 }));
@@ -137,14 +138,28 @@ const DoctorAppointments = () => {
                                         </Link>
                                     )}
 
-                                    {/* Chat button */}
+                                    {/* Chat button — navigates to dedicated chat page */}
                                     {['pending', 'confirmed', 'completed'].includes(appt.status) && (
-                                        <button
-                                            onClick={() => setChatAppointment(appt)}
+                                        <Link
+                                            to={`/doctor/chat/${appt._id}`}
                                             className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 font-medium border border-blue-200 hover:border-blue-400 px-2.5 py-1.5 rounded-lg transition-colors"
                                         >
                                             <FaComments className="text-xs" /> Chat
-                                        </button>
+                                        </Link>
+                                    )}
+
+                                    {/* View patient health data */}
+                                    <button
+                                        onClick={() => setHealthPanelPatient({ id: appt.patient?._id, name: appt.patient?.name })}
+                                        className="flex items-center gap-1 text-sm text-rose-600 hover:text-rose-800 font-medium border border-rose-200 hover:border-rose-400 px-2.5 py-1.5 rounded-lg transition-colors"
+                                        title="View patient health data"
+                                    >
+                                        <FaHeartbeat className="text-xs" /> Health
+                                    </button>
+
+                                    {/* Prescription PDF for completed appointments */}
+                                    {appt.status === 'completed' && appt.prescription?.medicines?.length > 0 && (
+                                        <PrescriptionPDF appointment={appt} className="text-sm py-1.5 px-3" />
                                     )}
                                 </div>
                             </div>
@@ -281,10 +296,14 @@ const DoctorAppointments = () => {
             )}
 
             {/* Chat Modal */}
-            {chatAppointment && (
-                <ChatModal
-                    appointment={chatAppointment}
-                    onClose={() => setChatAppointment(null)}
+            {/* Removed — Chat now uses dedicated /doctor/chat/:appointmentId page */}
+
+            {/* Patient Health Panel */}
+            {healthPanelPatient && (
+                <PatientHealthPanel
+                    patientId={healthPanelPatient.id}
+                    patientName={healthPanelPatient.name}
+                    onClose={() => setHealthPanelPatient(null)}
                 />
             )}
         </div>

@@ -210,8 +210,8 @@ const DoctorProfileEdit = () => {
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
                         className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${activeTab === tab.id
-                                ? 'bg-white text-blue-600 shadow-sm'
-                                : 'text-gray-600 hover:text-gray-800'
+                            ? 'bg-white text-blue-600 shadow-sm'
+                            : 'text-gray-600 hover:text-gray-800'
                             }`}
                     >
                         {tab.label}
@@ -328,78 +328,160 @@ const DoctorProfileEdit = () => {
                 {/* ── Availability Tab ───────────────────────────────────────── */}
                 {activeTab === 'availability' && (
                     <div className="card">
-                        <div className="flex justify-between items-center mb-4">
+                        <div className="flex justify-between items-center mb-5">
                             <div>
-                                <h3 className="font-semibold text-gray-900">Working Schedule</h3>
-                                <p className="text-sm text-gray-500 mt-0.5">Set the days and hours you're available for appointments</p>
+                                <h3 className="font-semibold text-gray-900">Weekly Schedule</h3>
+                                <p className="text-sm text-gray-500 mt-0.5">Set your availability for each day of the week</p>
                             </div>
-                            <button
-                                type="button"
-                                onClick={addAvailability}
-                                className="flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 font-medium border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
-                            >
-                                <FaPlus className="text-xs" /> Add Day
-                            </button>
                         </div>
 
-                        {(profile.availability || []).length === 0 ? (
-                            <div className="text-center py-8 text-gray-500">
-                                <p>No schedule set yet.</p>
-                                <button type="button" onClick={addAvailability} className="btn-primary mt-3 text-sm">
-                                    Add Your First Day
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="space-y-3">
-                                {profile.availability.map((slot, idx) => (
-                                    <div key={idx} className="grid grid-cols-2 sm:grid-cols-5 gap-2 items-center p-3 bg-gray-50 rounded-xl border border-gray-100">
-                                        <select
-                                            value={slot.day}
-                                            onChange={(e) => handleAvailabilityChange(idx, 'day', e.target.value)}
-                                            className="input-field text-sm col-span-2 sm:col-span-1"
-                                        >
-                                            {DAYS.map((d) => <option key={d} value={d}>{d}</option>)}
-                                        </select>
-                                        <div className="flex items-center gap-1">
-                                            <span className="text-xs text-gray-500 whitespace-nowrap">From</span>
-                                            <input
-                                                type="time"
-                                                value={slot.startTime}
-                                                onChange={(e) => handleAvailabilityChange(idx, 'startTime', e.target.value)}
-                                                className="input-field text-sm flex-1"
-                                            />
+                        {/* Visual Weekly Calendar Grid */}
+                        <div className="grid grid-cols-1 gap-3">
+                            {DAYS.map((day) => {
+                                const slot = (profile.availability || []).find((s) => s.day === day);
+                                const isActive = slot?.isAvailable ?? false;
+
+                                // Calculate slot count
+                                const slotCount = (() => {
+                                    if (!slot || !isActive) return 0;
+                                    const [sh, sm] = slot.startTime.split(':').map(Number);
+                                    const [eh, em] = slot.endTime.split(':').map(Number);
+                                    const totalMins = (eh * 60 + em) - (sh * 60 + sm);
+                                    return totalMins > 0 ? Math.floor(totalMins / (slot.slotDuration || 30)) : 0;
+                                })();
+
+                                const toggleDay = () => {
+                                    const existing = (profile.availability || []).findIndex((s) => s.day === day);
+                                    if (existing >= 0) {
+                                        const updated = [...profile.availability];
+                                        updated[existing] = { ...updated[existing], isAvailable: !updated[existing].isAvailable };
+                                        setProfile((prev) => ({ ...prev, availability: updated }));
+                                    } else {
+                                        setProfile((prev) => ({
+                                            ...prev,
+                                            availability: [
+                                                ...(prev.availability || []),
+                                                { day, startTime: '09:00', endTime: '17:00', slotDuration: 30, isAvailable: true },
+                                            ],
+                                        }));
+                                    }
+                                };
+
+                                const updateSlotField = (field, value) => {
+                                    const existing = (profile.availability || []).findIndex((s) => s.day === day);
+                                    if (existing >= 0) {
+                                        const updated = [...profile.availability];
+                                        updated[existing] = { ...updated[existing], [field]: value };
+                                        setProfile((prev) => ({ ...prev, availability: updated }));
+                                    }
+                                };
+
+                                return (
+                                    <div
+                                        key={day}
+                                        className={`rounded-xl border-2 transition-all ${isActive
+                                            ? 'border-blue-200 bg-blue-50'
+                                            : 'border-gray-100 bg-gray-50 opacity-70'
+                                            }`}
+                                    >
+                                        <div className="flex items-center gap-4 p-4">
+                                            {/* Day toggle */}
+                                            <div className="flex items-center gap-3 w-32 flex-shrink-0">
+                                                <button
+                                                    type="button"
+                                                    onClick={toggleDay}
+                                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${isActive ? 'bg-blue-600' : 'bg-gray-300'}`}
+                                                    aria-label={`Toggle ${day}`}
+                                                >
+                                                    <span
+                                                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${isActive ? 'translate-x-6' : 'translate-x-1'}`}
+                                                    />
+                                                </button>
+                                                <span className={`font-semibold text-sm ${isActive ? 'text-blue-700' : 'text-gray-400'}`}>
+                                                    {day.slice(0, 3)}
+                                                </span>
+                                            </div>
+
+                                            {isActive && slot ? (
+                                                <>
+                                                    {/* Time range picker */}
+                                                    <div className="flex items-center gap-2 flex-1 flex-wrap">
+                                                        <div className="flex items-center gap-1">
+                                                            <span className="text-xs text-gray-500 whitespace-nowrap">From</span>
+                                                            <input
+                                                                type="time"
+                                                                value={slot.startTime}
+                                                                onChange={(e) => updateSlotField('startTime', e.target.value)}
+                                                                className="input-field text-sm py-1.5 w-28"
+                                                            />
+                                                        </div>
+                                                        <div className="flex items-center gap-1">
+                                                            <span className="text-xs text-gray-500 whitespace-nowrap">To</span>
+                                                            <input
+                                                                type="time"
+                                                                value={slot.endTime}
+                                                                onChange={(e) => updateSlotField('endTime', e.target.value)}
+                                                                className="input-field text-sm py-1.5 w-28"
+                                                            />
+                                                        </div>
+                                                        <div className="flex items-center gap-1">
+                                                            <span className="text-xs text-gray-500 whitespace-nowrap">Slot</span>
+                                                            <select
+                                                                value={slot.slotDuration}
+                                                                onChange={(e) => updateSlotField('slotDuration', Number(e.target.value))}
+                                                                className="input-field text-sm py-1.5 w-24"
+                                                            >
+                                                                <option value={15}>15 min</option>
+                                                                <option value={30}>30 min</option>
+                                                                <option value={45}>45 min</option>
+                                                                <option value={60}>60 min</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Slot count badge */}
+                                                    <div className="flex-shrink-0 text-center">
+                                                        <div className="bg-blue-600 text-white text-xs font-bold px-2.5 py-1 rounded-full">
+                                                            {slotCount} slots
+                                                        </div>
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <span className="text-sm text-gray-400 italic">Not available</span>
+                                            )}
                                         </div>
-                                        <div className="flex items-center gap-1">
-                                            <span className="text-xs text-gray-500 whitespace-nowrap">To</span>
-                                            <input
-                                                type="time"
-                                                value={slot.endTime}
-                                                onChange={(e) => handleAvailabilityChange(idx, 'endTime', e.target.value)}
-                                                className="input-field text-sm flex-1"
-                                            />
-                                        </div>
-                                        <select
-                                            value={slot.slotDuration}
-                                            onChange={(e) => handleAvailabilityChange(idx, 'slotDuration', Number(e.target.value))}
-                                            className="input-field text-sm"
-                                        >
-                                            <option value={15}>15 min</option>
-                                            <option value={30}>30 min</option>
-                                            <option value={45}>45 min</option>
-                                            <option value={60}>60 min</option>
-                                        </select>
-                                        <button
-                                            type="button"
-                                            onClick={() => removeAvailability(idx)}
-                                            className="text-red-400 hover:text-red-600 flex items-center justify-center p-2 hover:bg-red-50 rounded-lg transition-colors"
-                                            aria-label="Remove"
-                                        >
-                                            <FaTrash />
-                                        </button>
+
+                                        {/* Visual time bar */}
+                                        {isActive && slot && (
+                                            <div className="px-4 pb-3">
+                                                <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
+                                                    {(() => {
+                                                        const [sh, sm] = slot.startTime.split(':').map(Number);
+                                                        const [eh, em] = slot.endTime.split(':').map(Number);
+                                                        const startPct = ((sh * 60 + sm) / (24 * 60)) * 100;
+                                                        const endPct = ((eh * 60 + em) / (24 * 60)) * 100;
+                                                        const width = Math.max(0, endPct - startPct);
+                                                        return (
+                                                            <div
+                                                                className="absolute h-full bg-blue-500 rounded-full"
+                                                                style={{ left: `${startPct}%`, width: `${width}%` }}
+                                                            />
+                                                        );
+                                                    })()}
+                                                </div>
+                                                <div className="flex justify-between text-xs text-gray-400 mt-1">
+                                                    <span>12am</span>
+                                                    <span>6am</span>
+                                                    <span>12pm</span>
+                                                    <span>6pm</span>
+                                                    <span>12am</span>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                ))}
-                            </div>
-                        )}
+                                );
+                            })}
+                        </div>
 
                         <button type="submit" disabled={saving} className="btn-primary mt-5 flex items-center gap-2">
                             {saving ? 'Saving...' : saved ? <><FaCheckCircle /> Saved!</> : 'Save Schedule'}
