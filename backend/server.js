@@ -41,6 +41,11 @@ connectDB();
 const { startReminderCron } = require('./utils/reminderCron');
 startReminderCron();
 
+// Allowed origins (must be defined before Socket.IO and CORS middleware)
+const allowedOrigins = process.env.CLIENT_URL
+  ? process.env.CLIENT_URL.split(',').map((o) => o.trim())
+  : ['http://localhost:3000'];
+
 const app = express();
 const server = http.createServer(app);
 
@@ -83,9 +88,6 @@ const authLimiter = rateLimit({
 });
 
 // CORS — allow all origins in development, whitelist in production
-const allowedOrigins = process.env.CLIENT_URL
-  ? process.env.CLIENT_URL.split(',').map((o) => o.trim())
-  : ['http://localhost:3000'];
 
 const corsOptions = {
   origin:
