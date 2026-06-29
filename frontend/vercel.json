@@ -1,0 +1,20 @@
+{
+    "version": 2,
+    "buildCommand": "npm run build",
+    "outputDirectory": "build",
+    "framework": "create-react-app",
+    "env": {
+        "REACT_APP_API_URL": "https://etelehealth.onrender.com/api",
+        "REACT_APP_SOCKET_URL": "https://etelehealth.onrender.com",
+        "REACT_APP_STRIPE_PUBLISHABLE_KEY": "pk_test_51TTpl6HUnjABKscUdXLGxO2cjHkNDi7HfN3LwyWumIL5uayhQlkNZlSRuxpE1fofVIMFfKdy4aVe37T1G1qIghGv00ywpi1jVC",
+        "REACT_APP_GOOGLE_CLIENT_ID": "575762274647-0mldti5d672876t4nhdefb7mdj7t4s1a.apps.googleusercontent.com",
+        "CI": "false",
+        "DISABLE_ESLINT_PLUGIN": "true"
+    },
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
+        }
+    ]
+}

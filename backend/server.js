@@ -53,7 +53,13 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: process.env.NODE_ENV === 'production'
-      ? allowedOrigins
+      ? (origin, callback) => {
+        if (!origin) return callback(null, true);
+        const isVercel = origin.endsWith('.vercel.app');
+        const isAllowed = allowedOrigins.some((o) => origin.startsWith(o));
+        if (isVercel || isAllowed) return callback(null, true);
+        return callback(new Error(`Socket CORS: origin ${origin} not allowed`));
+      }
       : '*',
     methods: ['GET', 'POST'],
     credentials: true,
@@ -88,16 +94,16 @@ const authLimiter = rateLimit({
 });
 
 // CORS — allow all origins in development, whitelist in production
-
 const corsOptions = {
   origin:
     process.env.NODE_ENV === 'production'
       ? (origin, callback) => {
-        // Allow requests with no origin (e.g. mobile apps, curl)
+        // Allow requests with no origin (e.g. mobile apps, curl, Render health checks)
         if (!origin) return callback(null, true);
-        if (allowedOrigins.some((allowed) => origin.startsWith(allowed))) {
-          return callback(null, true);
-        }
+        // Allow any vercel.app subdomain + any explicit CLIENT_URL entries
+        const isVercel = origin.endsWith('.vercel.app');
+        const isAllowed = allowedOrigins.some((o) => origin.startsWith(o));
+        if (isVercel || isAllowed) return callback(null, true);
         return callback(new Error(`CORS: origin ${origin} not allowed`));
       }
       : true, // allow all in dev
