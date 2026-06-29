@@ -114,7 +114,7 @@ const PatientAppointments = () => {
 
                                 <div className="flex items-center gap-3 flex-wrap">
                                     <StatusBadge status={appt.status} />
-                                    <span className="text-sm font-medium text-gray-700">${appt.payment?.amount}</span>
+                                    <span className="text-sm font-medium text-gray-700">₹{appt.payment?.amount}</span>
 
                                     {/* Pay Now — shown when appointment exists but payment is pending */}
                                     {appt.payment?.status === 'pending' && ['pending', 'confirmed'].includes(appt.status) && (

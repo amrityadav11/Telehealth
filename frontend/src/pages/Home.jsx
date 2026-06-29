@@ -1,9 +1,11 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import api from '../services/api';
 import {
     FaUserMd, FaVideo, FaCalendarCheck, FaShieldAlt, FaStar, FaClock,
     FaLock, FaHeartbeat, FaAward, FaComments, FaMobileAlt, FaFileAlt,
-    FaCheckCircle, FaArrowRight, FaQuoteLeft,
+    FaCheckCircle, FaArrowRight, FaQuoteLeft, FaLeaf, FaDumbbell,
+    FaBrain, FaVirus, FaHeart, FaEye,
 } from 'react-icons/fa';
 
 const FEATURES = [
@@ -100,12 +102,39 @@ const FEATURED_DOCTORS = [
     { name: 'Dr. Aisha Patel', specialty: 'Pediatrician', rating: 5.0, reviews: 203, exp: 8, initials: 'AP' },
 ];
 
+const ARTICLE_CATEGORY_META = {
+    Diet: { icon: FaLeaf, color: 'bg-green-100 text-green-700', badge: 'bg-green-600' },
+    Fitness: { icon: FaDumbbell, color: 'bg-orange-100 text-orange-700', badge: 'bg-orange-500' },
+    'Mental Health': { icon: FaBrain, color: 'bg-purple-100 text-purple-700', badge: 'bg-purple-600' },
+    Diseases: { icon: FaVirus, color: 'bg-red-100 text-red-700', badge: 'bg-red-600' },
+    Lifestyle: { icon: FaHeart, color: 'bg-pink-100 text-pink-700', badge: 'bg-pink-600' },
+    General: { icon: FaStar, color: 'bg-blue-100 text-blue-700', badge: 'bg-blue-600' },
+};
+
+const COVER_FALLBACKS = {
+    Diet: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&q=80',
+    Fitness: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=80',
+    'Mental Health': 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=600&q=80',
+    Diseases: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&q=80',
+    Lifestyle: 'https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=600&q=80',
+    General: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600&q=80',
+};
+
 const Home = () => {
     const [animatedStats, setAnimatedStats] = useState(false);
+    const [articles, setArticles] = useState([]);
+    const [articleModal, setArticleModal] = useState(null);
 
     useEffect(() => {
         const timer = setTimeout(() => setAnimatedStats(true), 300);
         return () => clearTimeout(timer);
+    }, []);
+
+    // Fetch latest 6 published articles for the home page
+    useEffect(() => {
+        api.get('/articles', { params: { limit: 6, page: 1 } })
+            .then(({ data }) => setArticles(data.articles || []))
+            .catch(() => { }); // silently fail — home page still works without articles
     }, []);
 
     return (
@@ -335,6 +364,151 @@ const Home = () => {
                 </div>
             </section>
 
+            {/* ── Health Hub Section ────────────────────────────────────── */}
+            {articles.length > 0 && (
+                <section className="py-20 px-4 bg-gradient-to-br from-green-50 to-teal-50 dark:from-gray-900 dark:to-gray-800">
+                    <div className="max-w-6xl mx-auto">
+                        <div className="text-center mb-12">
+                            <span className="text-green-600 dark:text-green-400 font-semibold text-sm uppercase tracking-wider">Health Hub</span>
+                            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mt-2">
+                                🌿 Daily Health Tips & Articles
+                            </h2>
+                            <p className="text-gray-500 dark:text-gray-400 mt-3 max-w-xl mx-auto">
+                                Expert-curated health articles on diet, fitness, mental wellness, and disease awareness — updated regularly.
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {articles.map((article) => {
+                                const meta = ARTICLE_CATEGORY_META[article.category] || ARTICLE_CATEGORY_META.General;
+                                const Icon = meta.icon;
+                                const cover = article.coverImage?.url || COVER_FALLBACKS[article.category] || COVER_FALLBACKS.General;
+                                return (
+                                    <button
+                                        key={article._id}
+                                        onClick={() => setArticleModal(article)}
+                                        className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 text-left group flex flex-col"
+                                    >
+                                        {/* Cover */}
+                                        <div className="relative h-44 overflow-hidden flex-shrink-0">
+                                            <img
+                                                src={cover}
+                                                alt={article.title}
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                onError={(e) => { e.target.src = COVER_FALLBACKS.General; }}
+                                            />
+                                            <span className={`absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full text-white ${meta.badge}`}>
+                                                {article.category}
+                                            </span>
+                                        </div>
+                                        {/* Body */}
+                                        <div className="p-5 flex flex-col flex-1">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${meta.color}`}>
+                                                    <Icon className="text-xs" />
+                                                </div>
+                                                <span className={`text-xs font-medium ${meta.color.split(' ')[1]}`}>{article.category}</span>
+                                            </div>
+                                            <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-snug mb-2 line-clamp-2 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
+                                                {article.title}
+                                            </h3>
+                                            <p className="text-gray-500 dark:text-gray-400 text-xs leading-relaxed line-clamp-2 flex-1">
+                                                {article.summary}
+                                            </p>
+                                            <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
+                                                <div className="flex items-center gap-1 text-xs text-gray-400">
+                                                    <FaClock className="text-xs" />
+                                                    <span>{article.readTime} min read</span>
+                                                </div>
+                                                <div className="flex items-center gap-1 text-xs text-gray-400">
+                                                    <FaEye className="text-xs" />
+                                                    <span>{article.views || 0} views</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <div className="text-center mt-10">
+                            <Link
+                                to="/health-hub"
+                                className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-xl transition-colors shadow-md hover:shadow-lg"
+                            >
+                                🌿 Read All Articles <FaArrowRight />
+                            </Link>
+                        </div>
+                    </div>
+
+                    {/* Article Quick-View Modal */}
+                    {articleModal && (
+                        <div
+                            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                            onClick={() => setArticleModal(null)}
+                        >
+                            <div
+                                className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                {/* Cover */}
+                                <div className="relative h-48 overflow-hidden rounded-t-2xl flex-shrink-0">
+                                    <img
+                                        src={articleModal.coverImage?.url || COVER_FALLBACKS[articleModal.category] || COVER_FALLBACKS.General}
+                                        alt={articleModal.title}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => { e.target.src = COVER_FALLBACKS.General; }}
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                                    <button
+                                        onClick={() => setArticleModal(null)}
+                                        className="absolute top-3 right-3 w-8 h-8 bg-white/20 hover:bg-white/40 backdrop-blur-sm rounded-full flex items-center justify-center text-white text-lg font-bold transition-colors"
+                                        aria-label="Close"
+                                    >
+                                        ×
+                                    </button>
+                                    <div className="absolute bottom-4 left-4 right-12">
+                                        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full text-white mb-2 inline-block ${(ARTICLE_CATEGORY_META[articleModal.category] || ARTICLE_CATEGORY_META.General).badge}`}>
+                                            {articleModal.category}
+                                        </span>
+                                        <h2 className="text-white font-bold text-lg leading-tight">{articleModal.title}</h2>
+                                    </div>
+                                </div>
+                                {/* Meta */}
+                                <div className="flex items-center gap-4 px-6 py-3 border-b border-gray-100 dark:border-gray-700 text-xs text-gray-500">
+                                    <span className="flex items-center gap-1"><FaClock /> {articleModal.readTime} min read</span>
+                                    <span className="flex items-center gap-1"><FaEye /> {articleModal.views} views</span>
+                                </div>
+                                {/* Summary */}
+                                <div className="px-6 pt-4 pb-2">
+                                    <p className="text-gray-600 dark:text-gray-300 text-sm italic border-l-4 border-green-400 pl-3">{articleModal.summary}</p>
+                                </div>
+                                {/* Content preview — first 600 chars */}
+                                <div className="px-6 pb-4 text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+                                    {articleModal.content?.slice(0, 600)}{articleModal.content?.length > 600 ? '...' : ''}
+                                </div>
+                                {/* CTA */}
+                                <div className="px-6 pb-6 flex gap-3">
+                                    <Link
+                                        to="/register"
+                                        onClick={() => setArticleModal(null)}
+                                        className="flex-1 text-center bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 rounded-xl transition-colors text-sm"
+                                    >
+                                        Sign Up to Read More
+                                    </Link>
+                                    <button
+                                        onClick={() => setArticleModal(null)}
+                                        className="flex-1 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 font-medium py-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm"
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </section>
+            )}
+
             {/* ── Doctor Showcase ───────────────────────────────────────────── */}
             <section className="py-20 px-4 bg-gray-50 dark:bg-gray-800">
                 <div className="max-w-6xl mx-auto">
@@ -421,6 +595,7 @@ const Home = () => {
                             <ul className="space-y-2 text-sm">
                                 <li><Link to="/doctors" className="hover:text-white transition-colors">Find Doctors</Link></li>
                                 <li><Link to="/symptom-checker" className="hover:text-white transition-colors">Symptom Checker</Link></li>
+                                <li><Link to="/patient/health-hub" className="hover:text-white transition-colors">Health Hub</Link></li>
                                 <li><Link to="/register" className="hover:text-white transition-colors">Sign Up Free</Link></li>
                             </ul>
                         </div>

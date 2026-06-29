@@ -189,7 +189,7 @@ const AdminDoctors = () => {
                                             <p className="text-sm text-gray-800">{doc.specialization}</p>
                                             <p className="text-xs text-gray-500">{doc.category}</p>
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-gray-800">${doc.consultationFee}</td>
+                                        <td className="px-6 py-4 text-sm text-gray-800">₹{doc.consultationFee?.toLocaleString()}</td>
                                         <td className="px-6 py-4">
                                             <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${doc.isApproved
                                                 ? 'bg-green-100 text-green-800'
@@ -361,7 +361,7 @@ const AdminDoctors = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Consultation Fee ($)</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Consultation Fee (₹)</label>
                                     <input
                                         type="number"
                                         name="consultationFee"

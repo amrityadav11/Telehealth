@@ -85,7 +85,7 @@ const AdminDashboard = () => {
                 <StatCard icon={FaUsers} label="Total Users" value={stats?.totalUsers || 0} color="bg-blue-500" link="/admin/users" />
                 <StatCard icon={FaUserMd} label="Active Doctors" value={stats?.totalDoctors || 0} color="bg-green-500" link="/admin/doctors" sub={`${stats?.totalDoctorsAll || 0} total registered`} />
                 <StatCard icon={FaCalendarAlt} label="Total Appointments" value={stats?.totalAppointments || 0} color="bg-purple-500" link="/admin/appointments" />
-                <StatCard icon={FaDollarSign} label="Total Revenue" value={`$${(stats?.totalRevenue || 0).toLocaleString()}`} color="bg-yellow-500" sub="From completed appointments" />
+                <StatCard icon={FaDollarSign} label="Total Revenue" value={`₹${(stats?.totalRevenue || 0).toLocaleString()}`} color="bg-yellow-500" sub="From completed appointments" />
             </div>
 
             {/* ── Row 2: Secondary stats ── */}
@@ -165,7 +165,7 @@ const AdminDashboard = () => {
                                 <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
                                 <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
                                 <Tooltip formatter={(value, name) => [
-                                    name === 'revenue' ? `$${value.toLocaleString()}` : value,
+                                    name === 'revenue' ? `₹${value.toLocaleString()}` : value,
                                     name === 'revenue' ? 'Revenue' : 'Appointments',
                                 ]} />
                                 <Legend />
@@ -314,7 +314,7 @@ const AdminDashboard = () => {
                                         <td className="py-3 text-gray-600">{appt.doctor?.user?.name}</td>
                                         <td className="py-3 text-gray-500">{format(new Date(appt.appointmentDate), 'MMM d, yyyy')}</td>
                                         <td className="py-3"><StatusBadge status={appt.status} /></td>
-                                        <td className="py-3 font-medium text-gray-800">${appt.payment?.amount}</td>
+                                        <td className="py-3 font-medium text-gray-800">₹{appt.payment?.amount?.toLocaleString()}</td>
                                     </tr>
                                 ))}
                             </tbody>

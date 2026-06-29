@@ -1,247 +1,47 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import {
     FaRobot, FaTimes, FaPaperPlane, FaUserMd, FaExclamationTriangle,
-    FaStethoscope, FaMicrophone, FaMicrophoneSlash, FaMapMarkerAlt,
-    FaPhoneAlt, FaChevronDown, FaChevronUp,
+    FaStethoscope, FaMicrophone, FaMicrophoneSlash,
+    FaPhoneAlt, FaChevronDown, FaChevronUp, FaRedo,
 } from 'react-icons/fa';
+import api from '../../services/api';
 
-// ── Symptom → Specialist mapping ──────────────────────────────────────────
-const SPECIALIST_MAP = [
-    {
-        keywords: ['chest pain', 'heart', 'palpitation', 'shortness of breath', 'breathless', 'breathing difficulty', 'irregular heartbeat', 'chest tightness'],
-        specialist: 'Cardiologist',
-        emoji: '❤️',
-        category: 'Cardiology',
-        emergency: true,
-        emergencyKeywords: ['chest pain', 'heart attack', 'breathless', 'breathing difficulty'],
-    },
-    {
-        keywords: ['skin', 'rash', 'acne', 'itching', 'itch', 'bumps', 'eczema', 'psoriasis', 'hives', 'redness', 'dry skin', 'pimple', 'blister', 'wound'],
-        specialist: 'Dermatologist',
-        emoji: '🧴',
-        category: 'Dermatology',
-        emergency: false,
-    },
-    {
-        keywords: ['headache', 'migraine', 'dizziness', 'nerve', 'numbness', 'seizure', 'memory', 'tremor', 'paralysis', 'fainting', 'unconscious', 'stroke'],
-        specialist: 'Neurologist',
-        emoji: '🧠',
-        category: 'Neurology',
-        emergency: false,
-        emergencyKeywords: ['unconscious', 'seizure', 'stroke', 'paralysis'],
-    },
-    {
-        keywords: ['eye', 'vision', 'blur', 'blurry', 'sight', 'glasses', 'cataract', 'glaucoma', 'red eye', 'eye pain', 'watery eyes'],
-        specialist: 'Ophthalmologist',
-        emoji: '👁️',
-        category: 'Ophthalmology',
-        emergency: false,
-    },
-    {
-        keywords: ['ear', 'nose', 'throat', 'hearing', 'tonsil', 'sinus', 'sneezing', 'cold', 'runny nose', 'sore throat', 'hoarse', 'nasal', 'earache', 'tinnitus'],
-        specialist: 'ENT Specialist',
-        emoji: '👂',
-        category: 'ENT',
-        emergency: false,
-    },
-    {
-        keywords: ['bone', 'joint', 'knee', 'back pain', 'spine', 'fracture', 'muscle pain', 'arthritis', 'shoulder', 'hip', 'ankle', 'wrist', 'neck pain', 'swollen joint'],
-        specialist: 'Orthopedic Surgeon',
-        emoji: '🦴',
-        category: 'Orthopedics',
-        emergency: false,
-    },
-    {
-        keywords: ['anxiety', 'depression', 'stress', 'mental', 'mood', 'panic', 'insomnia', 'sleep', 'phobia', 'ocd', 'bipolar', 'hallucination', 'suicidal', 'sad', 'lonely'],
-        specialist: 'Psychiatrist / Psychologist',
-        emoji: '🧘',
-        category: 'Psychiatry',
-        emergency: false,
-        emergencyKeywords: ['suicidal'],
-    },
-    {
-        keywords: ['child', 'baby', 'infant', 'toddler', 'kid', 'fever in child', 'vaccination', 'growth', 'pediatric'],
-        specialist: 'Pediatrician',
-        emoji: '👶',
-        category: 'Pediatrics',
-        emergency: false,
-    },
-    {
-        keywords: ['stomach', 'abdomen', 'digestion', 'nausea', 'vomiting', 'diarrhea', 'constipation', 'bloating', 'acid reflux', 'ulcer', 'liver', 'gastric', 'bowel'],
-        specialist: 'Gastroenterologist',
-        emoji: '🫁',
-        category: 'Gastroenterology',
-        emergency: false,
-    },
-    {
-        keywords: ['diabetes', 'thyroid', 'hormone', 'weight gain', 'weight loss', 'fatigue', 'sugar', 'insulin', 'adrenal', 'pituitary'],
-        specialist: 'Endocrinologist',
-        emoji: '⚗️',
-        category: 'Endocrinology',
-        emergency: false,
-    },
-    {
-        keywords: ['urine', 'kidney', 'bladder', 'urinary', 'prostate', 'uti', 'burning urination', 'blood in urine', 'frequent urination'],
-        specialist: 'Urologist',
-        emoji: '🫘',
-        category: 'Urology',
-        emergency: false,
-    },
-    {
-        keywords: ['pregnancy', 'period', 'menstrual', 'ovary', 'uterus', 'vaginal', 'gynecology', 'pcos', 'fertility', 'breast pain', 'menopause'],
-        specialist: 'Gynecologist',
-        emoji: '🌸',
-        category: 'Gynecology',
-        emergency: false,
-    },
-    {
-        keywords: ['lung', 'cough', 'asthma', 'tuberculosis', 'tb', 'pneumonia', 'wheezing', 'mucus', 'phlegm', 'respiratory'],
-        specialist: 'Pulmonologist',
-        emoji: '🫁',
-        category: 'Pulmonology',
-        emergency: false,
-        emergencyKeywords: ['severe breathing', 'can\'t breathe'],
-    },
+// ── Quick symptom chips ───────────────────────────────────────────────────
+const QUICK_SYMPTOMS = [
+    '😷 Fever & Cold',
+    '🤕 Headache',
+    '💔 Chest Pain',
+    '🦴 Joint Pain',
+    '🧴 Skin Rash',
+    '😰 Anxiety',
+    '👁️ Eye Problem',
+    '👂 Ear Pain',
 ];
 
+// ── Detect emergency keywords client-side for instant alert ──────────────
 const EMERGENCY_PHRASES = [
     'chest pain', 'heart attack', 'unconscious', 'not breathing', 'stroke',
     'severe bleeding', 'suicidal', 'overdose', 'seizure', 'paralysis',
-    'can\'t breathe', 'difficulty breathing',
+    "can't breathe", 'difficulty breathing',
 ];
+const isEmergencyText = (text) =>
+    EMERGENCY_PHRASES.some((p) => text.toLowerCase().includes(p));
 
-// ── AI Logic ──────────────────────────────────────────────────────────────
-const analyzeSymptoms = (text) => {
-    const lower = text.toLowerCase();
-
-    // Check for emergency
-    const isEmergency = EMERGENCY_PHRASES.some((phrase) => lower.includes(phrase));
-
-    // Find matching specialists
-    const matches = [];
-    for (const entry of SPECIALIST_MAP) {
-        const matchedKeywords = entry.keywords.filter((kw) => lower.includes(kw));
-        if (matchedKeywords.length > 0) {
-            matches.push({ ...entry, matchCount: matchedKeywords.length, matchedKeywords });
-        }
-    }
-
-    // Sort by match count
-    matches.sort((a, b) => b.matchCount - a.matchCount);
-
-    return { isEmergency, matches: matches.slice(0, 2) };
-};
-
-// ── Conversation flow ─────────────────────────────────────────────────────
-const FOLLOW_UP_QUESTIONS = [
-    { key: 'duration', question: 'How long have you had these symptoms? (e.g. 2 days, 1 week)' },
-    { key: 'pain', question: 'On a scale of 1–10, how would you rate your pain or discomfort?' },
-    { key: 'fever', question: 'Do you have a fever? If yes, what is your temperature?' },
-    { key: 'other', question: 'Any other symptoms like nausea, vomiting, or skin changes?' },
-];
-
-const buildBotResponse = (userText, conversationState) => {
-    const lower = userText.toLowerCase();
-
-    // Initial greeting response
-    if (conversationState.step === 'initial') {
-        const { isEmergency, matches } = analyzeSymptoms(userText);
-
-        if (isEmergency) {
-            return {
-                type: 'emergency',
-                text: '🚨 **EMERGENCY ALERT!** Your symptoms sound serious. Please call emergency services (112 / 911) immediately or go to the nearest emergency room. Do not wait!',
-                nextStep: 'done',
-            };
-        }
-
-        if (matches.length === 0) {
-            return {
-                type: 'followup',
-                text: 'I see. Could you describe your symptoms in a bit more detail? For example, where exactly is the pain or discomfort?',
-                nextStep: 'clarify',
-            };
-        }
-
-        // Store matches and ask follow-up
-        return {
-            type: 'followup',
-            text: `I understand. Let me ask a few quick questions to better understand your condition.\n\n${FOLLOW_UP_QUESTIONS[0].question}`,
-            nextStep: 'followup_0',
-            matches,
-        };
-    }
-
-    // Follow-up questions
-    if (conversationState.step?.startsWith('followup_')) {
-        const idx = parseInt(conversationState.step.split('_')[1]);
-        const nextIdx = idx + 1;
-
-        if (nextIdx < FOLLOW_UP_QUESTIONS.length) {
-            return {
-                type: 'followup',
-                text: FOLLOW_UP_QUESTIONS[nextIdx].question,
-                nextStep: `followup_${nextIdx}`,
-            };
-        }
-
-        // All follow-ups done → give recommendation
-        return {
-            type: 'recommendation',
-            text: null, // rendered as component
-            nextStep: 'done',
-            matches: conversationState.matches,
-        };
-    }
-
-    // After recommendation — handle new query
-    if (conversationState.step === 'done') {
-        const { isEmergency, matches } = analyzeSymptoms(userText);
-        if (isEmergency) {
-            return {
-                type: 'emergency',
-                text: '🚨 **EMERGENCY!** Please call 112 / 911 immediately!',
-                nextStep: 'done',
-            };
-        }
-        if (matches.length > 0) {
-            return {
-                type: 'followup',
-                text: `Got it! Let me ask a few questions.\n\n${FOLLOW_UP_QUESTIONS[0].question}`,
-                nextStep: 'followup_0',
-                matches,
-            };
-        }
-        return {
-            type: 'text',
-            text: 'Could you describe your symptoms more clearly? I\'m here to help!',
-            nextStep: 'initial',
-        };
-    }
-
-    // Clarify step
-    const { isEmergency, matches } = analyzeSymptoms(userText);
-    if (isEmergency) {
-        return {
-            type: 'emergency',
-            text: '🚨 **EMERGENCY!** Please call 112 / 911 immediately!',
-            nextStep: 'done',
-        };
-    }
-    if (matches.length > 0) {
-        return {
-            type: 'followup',
-            text: `Thank you! ${FOLLOW_UP_QUESTIONS[0].question}`,
-            nextStep: 'followup_0',
-            matches,
-        };
-    }
-    return {
-        type: 'text',
-        text: 'I\'m not sure I understood. Could you describe your main symptom in one sentence?',
-        nextStep: 'clarify',
-    };
+// ── Render markdown-lite: bold (**text**) and newlines ───────────────────
+const renderText = (text) => {
+    if (!text) return null;
+    return text.split('\n').map((line, i) => {
+        const parts = line.split(/\*\*(.*?)\*\*/g);
+        return (
+            <p key={i} className={i > 0 ? 'mt-1' : ''}>
+                {parts.map((part, j) =>
+                    j % 2 === 1 ? <strong key={j}>{part}</strong> : part
+                )}
+            </p>
+        );
+    });
 };
 
 // ── Message bubble ────────────────────────────────────────────────────────
@@ -267,82 +67,53 @@ const MessageBubble = ({ msg }) => {
         );
     }
 
-    if (msg.type === 'recommendation' && msg.matches) {
+    if (!isBot) {
         return (
-            <div className="flex gap-2 mb-3">
-                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
-                    <FaRobot className="text-white text-xs" />
-                </div>
-                <div className="bg-white border border-gray-200 rounded-2xl rounded-tl-none px-4 py-3 max-w-[90%] shadow-sm">
-                    <p className="text-sm text-gray-700 mb-3">
-                        Based on your symptoms, here's my recommendation:
-                    </p>
-                    {msg.matches.map((m, i) => (
-                        <div key={i} className={`mb-2 p-3 rounded-xl border ${i === 0 ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'}`}>
-                            <div className="flex items-center gap-2 mb-1">
-                                <span className="text-xl">{m.emoji}</span>
-                                <span className="font-semibold text-gray-900 text-sm">{m.specialist}</span>
-                                {i === 0 && <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full">Best Match</span>}
-                            </div>
-                            <p className="text-xs text-gray-500">Category: {m.category}</p>
-                            <Link
-                                to={`/doctors?category=${m.category}`}
-                                className="mt-2 inline-flex items-center gap-1 text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-                            >
-                                <FaUserMd className="text-xs" /> Find {m.specialist}
-                            </Link>
-                        </div>
-                    ))}
-                    <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <p className="text-xs text-yellow-800">
-                            ⚠️ <strong>Disclaimer:</strong> This is not a medical diagnosis. Please consult a qualified doctor for proper treatment.
-                        </p>
-                    </div>
-                    <p className="text-xs text-gray-400 mt-2">Do you have any other symptoms to discuss?</p>
+            <div className="flex justify-end mb-3">
+                <div className="bg-blue-600 text-white rounded-2xl rounded-tr-none px-4 py-2.5 max-w-[80%] text-sm">
+                    {msg.text}
                 </div>
             </div>
         );
     }
 
     return (
-        <div className={`flex gap-2 mb-3 ${!isBot ? 'flex-row-reverse' : ''}`}>
-            {isBot && (
-                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
-                    <FaRobot className="text-white text-xs" />
-                </div>
-            )}
-            <div className={`px-4 py-2.5 rounded-2xl max-w-[80%] text-sm ${isBot
-                    ? 'bg-white border border-gray-200 text-gray-700 rounded-tl-none shadow-sm'
-                    : 'bg-blue-600 text-white rounded-tr-none'
-                }`}>
-                {msg.text?.split('\n').map((line, i) => (
-                    <p key={i} className={i > 0 ? 'mt-1' : ''}>{line}</p>
-                ))}
+        <div className="flex gap-2 mb-3">
+            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
+                <FaRobot className="text-white text-xs" />
+            </div>
+            <div className="bg-white border border-gray-200 rounded-2xl rounded-tl-none px-4 py-3 max-w-[85%] shadow-sm text-sm text-gray-700">
+                {renderText(msg.text)}
+                {msg.showFindDoctor && (
+                    <Link
+                        to="/doctors"
+                        className="mt-3 inline-flex items-center gap-1.5 text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                    >
+                        <FaUserMd /> Browse Doctors
+                    </Link>
+                )}
             </div>
         </div>
     );
 };
 
-// ── Quick symptom chips ───────────────────────────────────────────────────
-const QUICK_SYMPTOMS = [
-    '😷 Fever & Cold', '🤕 Headache', '💔 Chest Pain', '🦴 Joint Pain',
-    '🧴 Skin Rash', '😰 Anxiety', '👁️ Eye Problem', '👂 Ear Pain',
-];
-
 // ── Main SymptomChecker component ─────────────────────────────────────────
 const SymptomChecker = () => {
+    const { user, token } = useSelector((s) => s.auth);
+
     const [isOpen, setIsOpen] = useState(false);
     const [isMinimized, setIsMinimized] = useState(false);
     const [messages, setMessages] = useState([
         {
             role: 'bot',
             type: 'text',
-            text: 'Hi there! 👋 I\'m your AI Health Assistant.\n\nPlease tell me what symptoms or health problems you\'re experiencing, and I\'ll help suggest the right specialist for you.',
+            text: "Hi there! 👋 I'm your AI Health Assistant powered by Gemini.\n\nTell me what symptoms you're experiencing and I'll help suggest the right specialist for you.",
         },
     ]);
+    // Gemini multi-turn history (role: 'user' | 'model')
+    const [chatHistory, setChatHistory] = useState([]);
     const [input, setInput] = useState('');
-    const [isTyping, setIsTyping] = useState(false);
-    const [conversationState, setConversationState] = useState({ step: 'initial', matches: [] });
+    const [isLoading, setIsLoading] = useState(false);
     const [isListening, setIsListening] = useState(false);
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
@@ -350,7 +121,7 @@ const SymptomChecker = () => {
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages, isTyping]);
+    }, [messages, isLoading]);
 
     // Voice recognition setup
     useEffect(() => {
@@ -360,10 +131,8 @@ const SymptomChecker = () => {
             recognitionRef.current.continuous = false;
             recognitionRef.current.interimResults = false;
             recognitionRef.current.lang = 'en-IN';
-
-            recognitionRef.current.onresult = (event) => {
-                const transcript = event.results[0][0].transcript;
-                setInput(transcript);
+            recognitionRef.current.onresult = (e) => {
+                setInput(e.results[0][0].transcript);
                 setIsListening(false);
             };
             recognitionRef.current.onerror = () => setIsListening(false);
@@ -382,32 +151,83 @@ const SymptomChecker = () => {
         }
     };
 
-    const sendMessage = (text) => {
+    const sendMessage = async (text) => {
         const trimmed = (text || input).trim();
-        if (!trimmed) return;
+        if (!trimmed || isLoading) return;
 
-        // Add user message
+        // Add user message to UI
         setMessages((prev) => [...prev, { role: 'user', type: 'text', text: trimmed }]);
         setInput('');
-        setIsTyping(true);
+        setIsLoading(true);
 
-        // Simulate AI thinking delay
-        setTimeout(() => {
-            const response = buildBotResponse(trimmed, conversationState);
+        // Client-side emergency fast-path
+        if (isEmergencyText(trimmed)) {
+            setMessages((prev) => [
+                ...prev,
+                {
+                    role: 'bot',
+                    type: 'emergency',
+                    text: '🚨 EMERGENCY ALERT! Your symptoms sound serious. Please call emergency services (112 / 911) immediately or go to the nearest emergency room. Do not wait!',
+                },
+            ]);
+            setIsLoading(false);
+            return;
+        }
 
-            // Update conversation state
-            setConversationState((prev) => ({
-                step: response.nextStep,
-                matches: response.matches || prev.matches,
-            }));
+        // If not logged in, fall back to a helpful message
+        if (!token) {
+            setMessages((prev) => [
+                ...prev,
+                {
+                    role: 'bot',
+                    type: 'text',
+                    text: 'Please log in to use the AI symptom checker. It helps me give you personalised health guidance.',
+                    showFindDoctor: false,
+                },
+            ]);
+            setIsLoading(false);
+            return;
+        }
 
-            setMessages((prev) => [...prev, { role: 'bot', ...response }]);
-            setIsTyping(false);
-        }, 800 + Math.random() * 400);
+        try {
+            const { data } = await api.post('/ai/symptom-check', {
+                messages: chatHistory,
+                userMessage: trimmed,
+            });
+
+            const replyText = data.reply || 'Sorry, I could not process that. Please try again.';
+
+            // Update chat history for next turn (Groq format)
+            setChatHistory((prev) => [
+                ...prev,
+                { role: 'user', content: trimmed },
+                { role: 'assistant', content: replyText },
+            ]);
+
+            // Detect if reply mentions finding a doctor
+            const showFindDoctor =
+                replyText.toLowerCase().includes('specialist') ||
+                replyText.toLowerCase().includes('doctor') ||
+                replyText.toLowerCase().includes('consult');
+
+            setMessages((prev) => [
+                ...prev,
+                { role: 'bot', type: 'text', text: replyText, showFindDoctor },
+            ]);
+        } catch (err) {
+            const errMsg =
+                err.response?.data?.message ||
+                'Something went wrong. Please try again in a moment.';
+            setMessages((prev) => [
+                ...prev,
+                { role: 'bot', type: 'text', text: `⚠️ ${errMsg}` },
+            ]);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleQuickSymptom = (symptom) => {
-        // Strip emoji prefix
         const clean = symptom.replace(/^[^\w]+/, '').trim();
         sendMessage(clean);
     };
@@ -417,13 +237,14 @@ const SymptomChecker = () => {
             {
                 role: 'bot',
                 type: 'text',
-                text: 'Hi again! 👋 Tell me your symptoms and I\'ll help you find the right doctor.',
+                text: "Hi again! 👋 Tell me your symptoms and I'll help you find the right doctor.",
             },
         ]);
-        setConversationState({ step: 'initial', matches: [] });
+        setChatHistory([]);
         setInput('');
     };
 
+    // Floating button when closed
     if (!isOpen) {
         return (
             <button
@@ -438,7 +259,10 @@ const SymptomChecker = () => {
     }
 
     return (
-        <div className={`fixed bottom-6 right-6 z-50 w-[360px] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col transition-all ${isMinimized ? 'h-14' : 'h-[560px]'}`}>
+        <div
+            className={`fixed bottom-6 right-6 z-50 w-[360px] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col transition-all ${isMinimized ? 'h-14' : 'h-[560px]'
+                }`}
+        >
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 bg-blue-600 rounded-t-2xl flex-shrink-0">
                 <div className="flex items-center gap-2">
@@ -449,17 +273,29 @@ const SymptomChecker = () => {
                         <p className="text-white font-semibold text-sm">AI Health Assistant</p>
                         <p className="text-blue-200 text-xs flex items-center gap-1">
                             <span className="w-1.5 h-1.5 bg-green-400 rounded-full inline-block" />
-                            Online · Not a doctor
+                            Gemini AI · Not a doctor
                         </p>
                     </div>
                 </div>
                 <div className="flex items-center gap-1">
                     <button
+                        onClick={handleReset}
+                        className="text-white/70 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                        aria-label="Reset chat"
+                        title="New chat"
+                    >
+                        <FaRedo className="text-xs" />
+                    </button>
+                    <button
                         onClick={() => setIsMinimized(!isMinimized)}
                         className="text-white/70 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors"
                         aria-label={isMinimized ? 'Expand' : 'Minimize'}
                     >
-                        {isMinimized ? <FaChevronUp className="text-xs" /> : <FaChevronDown className="text-xs" />}
+                        {isMinimized ? (
+                            <FaChevronUp className="text-xs" />
+                        ) : (
+                            <FaChevronDown className="text-xs" />
+                        )}
                     </button>
                     <button
                         onClick={() => setIsOpen(false)}
@@ -474,12 +310,12 @@ const SymptomChecker = () => {
             {!isMinimized && (
                 <>
                     {/* Messages */}
-                    <div className="flex-1 overflow-y-auto px-3 py-3 bg-gray-50 space-y-1">
+                    <div className="flex-1 overflow-y-auto px-3 py-3 bg-gray-50">
                         {messages.map((msg, i) => (
                             <MessageBubble key={i} msg={msg} />
                         ))}
 
-                        {isTyping && (
+                        {isLoading && (
                             <div className="flex gap-2 mb-3">
                                 <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
                                     <FaRobot className="text-white text-xs" />
@@ -516,38 +352,33 @@ const SymptomChecker = () => {
 
                     {/* Input */}
                     <div className="px-3 py-3 border-t border-gray-100 bg-white rounded-b-2xl flex-shrink-0">
-                        <div className="flex gap-2 items-center">
-                            <button
-                                onClick={handleReset}
-                                className="text-gray-400 hover:text-gray-600 text-xs px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors whitespace-nowrap"
-                                title="Start over"
-                            >
-                                Reset
-                            </button>
-                            <div className="flex-1 flex items-center gap-2 bg-gray-100 rounded-xl px-3 py-2">
-                                <input
-                                    ref={inputRef}
-                                    type="text"
-                                    value={input}
-                                    onChange={(e) => setInput(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-                                    placeholder="Describe your symptoms..."
-                                    className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none"
-                                />
-                                {recognitionRef.current && (
-                                    <button
-                                        onClick={toggleVoice}
-                                        className={`text-sm transition-colors ${isListening ? 'text-red-500 animate-pulse' : 'text-gray-400 hover:text-blue-600'}`}
-                                        title={isListening ? 'Stop listening' : 'Voice input'}
-                                        aria-label="Voice input"
-                                    >
-                                        {isListening ? <FaMicrophoneSlash /> : <FaMicrophone />}
-                                    </button>
-                                )}
-                            </div>
+                        <div className="flex gap-2 items-center bg-gray-100 rounded-xl px-3 py-2">
+                            <input
+                                ref={inputRef}
+                                type="text"
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+                                placeholder="Describe your symptoms..."
+                                className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none"
+                                disabled={isLoading}
+                            />
+                            {recognitionRef.current && (
+                                <button
+                                    onClick={toggleVoice}
+                                    className={`text-sm transition-colors ${isListening
+                                        ? 'text-red-500 animate-pulse'
+                                        : 'text-gray-400 hover:text-blue-600'
+                                        }`}
+                                    title={isListening ? 'Stop listening' : 'Voice input'}
+                                    aria-label="Voice input"
+                                >
+                                    {isListening ? <FaMicrophoneSlash /> : <FaMicrophone />}
+                                </button>
+                            )}
                             <button
                                 onClick={() => sendMessage()}
-                                disabled={!input.trim()}
+                                disabled={!input.trim() || isLoading}
                                 className="w-9 h-9 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white rounded-xl flex items-center justify-center transition-colors flex-shrink-0"
                                 aria-label="Send"
                             >

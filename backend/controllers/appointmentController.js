@@ -68,6 +68,25 @@ const bookAppointment = asyncHandler(async (req, res) => {
     bookedForName: bookedForName || undefined,
   });
 
+  // ── Auto-create chat thread so both parties see each other in inbox ──
+  try {
+    const Chat = require('../models/Chat');
+    await Chat.findOneAndUpdate(
+      { appointment: appointment._id },
+      {
+        $setOnInsert: {
+          appointment: appointment._id,
+          doctor: doctor.user._id,
+          patient: req.user._id,
+          messages: [],
+        },
+      },
+      { upsert: true, new: true }
+    );
+  } catch (chatErr) {
+    console.error('Chat init error:', chatErr.message);
+  }
+
   await appointment.populate([
     { path: 'patient', select: 'name email phone' },
     { path: 'doctor', populate: { path: 'user', select: 'name email' } },
@@ -275,6 +294,30 @@ const updateAppointmentStatus = asyncHandler(async (req, res) => {
   }
 
   await appointment.save();
+
+  // ── Ensure chat thread exists when appointment is confirmed ──────────
+  if (status === 'confirmed') {
+    try {
+      const Chat = require('../models/Chat');
+      const doctorDoc = await Doctor.findById(appointment.doctor._id).select('user');
+      if (doctorDoc) {
+        await Chat.findOneAndUpdate(
+          { appointment: appointment._id },
+          {
+            $setOnInsert: {
+              appointment: appointment._id,
+              doctor: doctorDoc.user,
+              patient: appointment.patient._id,
+              messages: [],
+            },
+          },
+          { upsert: true, new: true }
+        );
+      }
+    } catch (chatErr) {
+      console.error('Chat init error on confirm:', chatErr.message);
+    }
+  }
 
   // Notify patient
   const patientUser = await User.findById(appointment.patient._id);

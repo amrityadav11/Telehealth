@@ -232,6 +232,7 @@ const getInbox = asyncHandler(async (req, res) => {
             (m) => !m.readBy.map((id) => id.toString()).includes(userId.toString())
         ).length;
 
+        // For doctor: other = patient; for patient: other = doctor (User doc)
         const other = req.user.role === 'doctor' ? chat.patient : chat.doctor;
 
         return {

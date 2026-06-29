@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaStar, FaClock, FaDollarSign, FaUserMd, FaVideo, FaCheckCircle } from 'react-icons/fa';
+import { FaStar, FaClock, FaRupeeSign, FaUserMd, FaVideo, FaCheckCircle } from 'react-icons/fa';
 import StarRating from '../common/StarRating';
 
 const DoctorCard = ({ doctor }) => {
@@ -51,8 +51,8 @@ const DoctorCard = ({ doctor }) => {
                             <span>{experience} yrs exp</span>
                         </div>
                         <div className="flex items-center gap-1">
-                            <FaDollarSign className="text-gray-400" />
-                            <span>${consultationFee}</span>
+                            <FaRupeeSign className="text-gray-400" />
+                            <span>{consultationFee?.toLocaleString()}</span>
                         </div>
                         <div className="flex items-center gap-1">
                             <StarRating rating={rating} size="sm" />

@@ -131,28 +131,28 @@ const DoctorEarnings = () => {
                 <StatCard
                     icon={FaDollarSign}
                     label="Total Earnings"
-                    value={`$${(stats?.totalEarnings || 0).toLocaleString()}`}
+                    value={`₹${(stats?.totalEarnings || 0).toLocaleString()}`}
                     color="bg-green-500"
                     sub="All time"
                 />
                 <StatCard
                     icon={FaChartLine}
                     label="This Month"
-                    value={`$${(thisMonthData?.earnings || 0).toLocaleString()}`}
+                    value={`₹${(thisMonthData?.earnings || 0).toLocaleString()}`}
                     color="bg-blue-500"
                     sub={`${thisMonthData?.appointments || 0} appointments`}
                 />
                 <StatCard
                     icon={FaCheckCircle}
                     label="Avg per Appointment"
-                    value={`$${avgPerAppointment.toLocaleString()}`}
+                    value={`₹${avgPerAppointment.toLocaleString()}`}
                     color="bg-teal-500"
                     sub={`${stats?.completed || 0} completed`}
                 />
                 <StatCard
                     icon={FaTrophy}
                     label="Best Month"
-                    value={bestMonth ? `$${bestMonth.earnings.toLocaleString()}` : 'N/A'}
+                    value={bestMonth ? `₹${bestMonth.earnings.toLocaleString()}` : 'N/A'}
                     color="bg-yellow-500"
                     sub={bestMonth ? `${bestMonth.name} ${bestMonth.year}` : ''}
                 />
@@ -176,8 +176,8 @@ const DoctorEarnings = () => {
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                             <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                            <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `$${v}`} />
-                            <Tooltip formatter={(v) => [`$${v.toLocaleString()}`, 'Earnings']} />
+                            <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `₹${v}`} />
+                            <Tooltip formatter={(v) => [`₹${v.toLocaleString()}`, 'Earnings']} />
                             <Area type="monotone" dataKey="earnings" stroke="#16a34a" fill="url(#earningsGrad)" strokeWidth={2} />
                         </AreaChart>
                     </ResponsiveContainer>
@@ -268,7 +268,7 @@ const DoctorEarnings = () => {
                                             {new Date(appt.appointmentDate).toLocaleDateString()}
                                         </td>
                                         <td className="py-3 text-gray-600">{appt.timeSlot?.startTime}</td>
-                                        <td className="py-3 font-semibold text-green-600">${appt.payment?.amount}</td>
+                                        <td className="py-3 font-semibold text-green-600">₹{appt.payment?.amount}</td>
                                         <td className="py-3">
                                             <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${appt.payment?.status === 'paid'
                                                 ? 'bg-green-100 text-green-700'
@@ -286,7 +286,7 @@ const DoctorEarnings = () => {
                                         Total ({filteredPayments.length} appointments)
                                     </td>
                                     <td className="py-3 font-bold text-green-700 text-base">
-                                        ${filteredPayments.reduce((sum, a) => sum + (a.payment?.amount || 0), 0).toLocaleString()}
+                                        ₹{filteredPayments.reduce((sum, a) => sum + (a.payment?.amount || 0), 0).toLocaleString()}
                                     </td>
                                     <td />
                                 </tr>

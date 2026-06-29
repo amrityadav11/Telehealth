@@ -65,10 +65,12 @@ import MedicalRecords from './pages/patient/MedicalRecords';
 import HealthVitals from './pages/patient/HealthVitals';
 import LabTests from './pages/patient/LabTests';
 import FamilyProfiles from './pages/patient/FamilyProfiles';
+import HealthHub from './pages/patient/HealthHub';
 import DoctorPayouts from './pages/doctor/Payouts';
 import DoctorOnboarding from './pages/doctor/Onboarding';
 import AdminAnalytics from './pages/admin/Analytics';
 import AdminPayouts from './pages/admin/Payouts';
+import AdminArticles from './pages/admin/Articles';
 import OnboardingTour from './components/common/OnboardingTour';
 import DoctorChat from './pages/doctor/Chat';
 import PatientChat from './pages/patient/Chat';
@@ -196,6 +198,7 @@ function App() {
                 <Route path="/doctors" element={<WithNavbar><DoctorList /></WithNavbar>} />
                 <Route path="/doctors/:id" element={<WithNavbar><DoctorProfile /></WithNavbar>} />
                 <Route path="/symptom-checker" element={<WithNavbar><SymptomCheckerPage /></WithNavbar>} />
+                <Route path="/health-hub" element={<WithNavbar><HealthHub /></WithNavbar>} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/verify-2fa" element={<TwoFactorVerify />} />
 
@@ -216,6 +219,7 @@ function App() {
                             <Route path="/patient/family" element={<FamilyProfiles />} />
                             <Route path="/patient/chat" element={<PatientChat />} />
                             <Route path="/patient/chat/:appointmentId" element={<PatientChat />} />
+                            <Route path="/patient/health-hub" element={<HealthHub />} />
                         </Route>
                         {/* Book appointment uses navbar layout */}
                         <Route path="/patient/book/:doctorId" element={<WithNavbar><BookAppointment /></WithNavbar>} />
@@ -258,6 +262,7 @@ function App() {
                             <Route path="/admin/audit-logs" element={<AuditLogs />} />
                             <Route path="/admin/analytics" element={<AdminAnalytics />} />
                             <Route path="/admin/payouts" element={<AdminPayouts />} />
+                            <Route path="/admin/articles" element={<AdminArticles />} />
                         </Route>
                     </Route>
                 </Route>

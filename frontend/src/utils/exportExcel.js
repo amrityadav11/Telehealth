@@ -87,7 +87,7 @@ export const exportDoctorsExcel = (doctors) => {
     exportToExcel(
         rows,
         ['name', 'email', 'specialization', 'category', 'experience', 'fee', 'approved', 'joined'],
-        ['Name', 'Email', 'Specialization', 'Category', 'Experience (yrs)', 'Fee ($)', 'Approved', 'Joined'],
+        ['Name', 'Email', 'Specialization', 'Category', 'Experience (yrs)', 'Fee (₹)', 'Approved', 'Joined'],
         'Doctors',
         `telehealth-doctors-${new Date().toISOString().slice(0, 10)}`
     );

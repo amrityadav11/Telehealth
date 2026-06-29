@@ -5,7 +5,7 @@ import { logout } from '../../store/slices/authSlice';
 import {
     FaTachometerAlt, FaUserMd, FaUsers, FaCalendarAlt,
     FaSignOutAlt, FaBars, FaTimes, FaUserShield, FaStar,
-    FaUserCircle, FaClipboardList, FaChartLine, FaMoneyBillWave,
+    FaUserCircle, FaClipboardList, FaChartLine, FaMoneyBillWave, FaNewspaper,
 } from 'react-icons/fa';
 
 const navItems = [
@@ -16,6 +16,7 @@ const navItems = [
     { to: '/admin/reviews', icon: FaStar, label: 'Reviews' },
     { to: '/admin/analytics', icon: FaChartLine, label: 'Analytics' },
     { to: '/admin/payouts', icon: FaMoneyBillWave, label: 'Payouts' },
+    { to: '/admin/articles', icon: FaNewspaper, label: 'Health Hub' },
     { to: '/admin/create-admin', icon: FaUserShield, label: 'Create Admin' },
     { to: '/admin/profile', icon: FaUserCircle, label: 'My Profile' },
     { to: '/admin/audit-logs', icon: FaClipboardList, label: 'Audit Logs' },

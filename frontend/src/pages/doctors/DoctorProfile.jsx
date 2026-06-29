@@ -5,7 +5,7 @@ import { fetchDoctor } from '../../store/slices/doctorSlice';
 import { PageSpinner } from '../../components/common/Spinner';
 import StarRating from '../../components/common/StarRating';
 import {
-    FaUserMd, FaClock, FaDollarSign, FaPhone, FaGraduationCap,
+    FaUserMd, FaClock, FaRupeeSign, FaPhone, FaGraduationCap,
     FaLanguage, FaHospital, FaCalendarAlt, FaVideo, FaStar,
     FaCheckCircle, FaShieldAlt, FaIdCard,
 } from 'react-icons/fa';
@@ -98,7 +98,7 @@ const DoctorProfile = () => {
                                 <div className="text-gray-500">Years Exp.</div>
                             </div>
                             <div className="bg-gray-50 rounded-lg p-3">
-                                <div className="font-bold text-gray-900 text-lg">${consultationFee}</div>
+                                <div className="font-bold text-gray-900 text-lg">₹{consultationFee?.toLocaleString()}</div>
                                 <div className="text-gray-500">Per Visit</div>
                             </div>
                         </div>

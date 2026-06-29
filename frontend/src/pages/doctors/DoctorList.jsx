@@ -105,7 +105,7 @@ const DoctorList = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Min Fee ($)</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Min Fee (₹)</label>
                             <input
                                 type="number"
                                 value={filters.minFee}
@@ -117,13 +117,13 @@ const DoctorList = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Max Fee ($)</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Max Fee (₹)</label>
                             <input
                                 type="number"
                                 value={filters.maxFee}
                                 onChange={(e) => handleFilterChange('maxFee', e.target.value)}
                                 className="input-field"
-                                placeholder="500"
+                                placeholder="5000"
                                 min="0"
                             />
                         </div>

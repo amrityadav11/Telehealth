@@ -5,7 +5,7 @@ import { logout } from '../../store/slices/authSlice';
 import {
     FaTachometerAlt, FaCalendarAlt, FaSearch,
     FaUserCircle, FaSignOutAlt, FaBars, FaFileMedical, FaFolderOpen,
-    FaHeartbeat, FaFlask, FaUsers, FaComments,
+    FaHeartbeat, FaFlask, FaUsers, FaComments, FaLeaf,
 } from 'react-icons/fa';
 
 const PatientLayout = () => {
@@ -17,6 +17,7 @@ const PatientLayout = () => {
 
     const navItems = [
         { to: '/patient/dashboard', icon: FaTachometerAlt, label: 'Dashboard' },
+        { to: '/patient/health-hub', icon: FaLeaf, label: 'Health Hub' },
         { to: '/doctors', icon: FaSearch, label: 'Find Doctors' },
         { to: '/patient/appointments', icon: FaCalendarAlt, label: 'My Appointments' },
         { to: '/patient/chat', icon: FaComments, label: 'Chat with Doctor', badge: totalUnread },

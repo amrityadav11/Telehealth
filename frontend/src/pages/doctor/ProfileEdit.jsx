@@ -259,7 +259,7 @@ const DoctorProfileEdit = () => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Consultation Fee ($) *</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Consultation Fee (₹) *</label>
                                 <input
                                     type="number"
                                     value={profile.consultationFee ?? 0}

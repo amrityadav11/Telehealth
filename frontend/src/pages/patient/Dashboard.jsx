@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import api from '../../services/api';
-import { FaCalendarAlt, FaUserMd, FaCheckCircle, FaTimesCircle, FaSearch } from 'react-icons/fa';
+import { FaCalendarAlt, FaUserMd, FaCheckCircle, FaTimesCircle, FaSearch, FaStethoscope, FaRobot, FaPaperPlane } from 'react-icons/fa';
 import StatusBadge from '../../components/common/StatusBadge';
 import Spinner from '../../components/common/Spinner';
 import { format } from 'date-fns';
@@ -18,6 +18,120 @@ const StatCard = ({ icon: Icon, label, value, color }) => (
         </div>
     </div>
 );
+
+// ── Inline AI Symptom Checker widget ─────────────────────────────────────
+const SymptomCheckerWidget = () => {
+    const [input, setInput] = useState('');
+    const [reply, setReply] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    const QUICK = ['😷 Fever & Cold', '🤕 Headache', '💔 Chest Pain', '🦴 Joint Pain', '🧴 Skin Rash'];
+
+    const ask = async (text) => {
+        const trimmed = (text || input).trim();
+        if (!trimmed || loading) return;
+        setLoading(true);
+        setError('');
+        setReply('');
+        try {
+            const { data } = await api.post('/ai/symptom-check', {
+                messages: [],
+                userMessage: trimmed,
+            });
+            setReply(data.reply);
+        } catch (err) {
+            setError(err.response?.data?.message || 'Could not reach AI. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="card">
+            <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <FaRobot className="text-white text-lg" />
+                </div>
+                <div>
+                    <h2 className="text-lg font-semibold text-gray-900">AI Symptom Checker</h2>
+                    <p className="text-xs text-gray-500 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full inline-block" />
+                        Powered by Gemini AI
+                    </p>
+                </div>
+                <Link
+                    to="/symptom-checker"
+                    className="ml-auto text-xs text-blue-600 hover:underline font-medium"
+                >
+                    Full page →
+                </Link>
+            </div>
+
+            {/* Quick chips */}
+            <div className="flex flex-wrap gap-2 mb-3">
+                {QUICK.map((s) => (
+                    <button
+                        key={s}
+                        onClick={() => ask(s.replace(/^[^\w]+/, '').trim())}
+                        disabled={loading}
+                        className="text-xs bg-blue-50 text-blue-700 border border-blue-100 px-2.5 py-1 rounded-full hover:bg-blue-100 transition-colors disabled:opacity-50"
+                    >
+                        {s}
+                    </button>
+                ))}
+            </div>
+
+            {/* Input row */}
+            <div className="flex gap-2 items-center bg-gray-100 rounded-xl px-3 py-2 mb-3">
+                <input
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && ask()}
+                    placeholder="Describe your symptoms..."
+                    className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none"
+                    disabled={loading}
+                />
+                <button
+                    onClick={() => ask()}
+                    disabled={!input.trim() || loading}
+                    className="w-8 h-8 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white rounded-lg flex items-center justify-center transition-colors"
+                    aria-label="Ask AI"
+                >
+                    <FaPaperPlane className="text-xs" />
+                </button>
+            </div>
+
+            {/* Response */}
+            {loading && (
+                <div className="flex gap-1 items-center py-2 px-1">
+                    {[0, 150, 300].map((d) => (
+                        <span key={d} className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: `${d}ms` }} />
+                    ))}
+                    <span className="text-xs text-gray-400 ml-2">Gemini is thinking...</span>
+                </div>
+            )}
+            {error && (
+                <p className="text-xs text-red-500 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>
+            )}
+            {reply && !loading && (
+                <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 text-sm text-gray-700 whitespace-pre-wrap">
+                    {reply}
+                    <div className="mt-3 pt-3 border-t border-blue-100 flex items-center justify-between">
+                        <p className="text-xs text-gray-400">⚠️ Not a medical diagnosis</p>
+                        <Link
+                            to="/doctors"
+                            className="inline-flex items-center gap-1 text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                            <FaUserMd className="text-xs" /> Find a Doctor
+                        </Link>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
 
 const PatientDashboard = () => {
     const { user } = useSelector((s) => s.auth);
@@ -64,7 +178,7 @@ const PatientDashboard = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
                 <Link
                     to="/doctors"
                     className="card flex items-center gap-4 hover:shadow-md transition-shadow group"
@@ -90,6 +204,24 @@ const PatientDashboard = () => {
                         <p className="text-gray-500 text-sm">View and manage your bookings</p>
                     </div>
                 </Link>
+
+                <Link
+                    to="/symptom-checker"
+                    className="card flex items-center gap-4 hover:shadow-md transition-shadow group"
+                >
+                    <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                        <FaStethoscope className="text-purple-600 text-xl" />
+                    </div>
+                    <div>
+                        <h3 className="font-semibold text-gray-900 group-hover:text-purple-600">Symptom Checker</h3>
+                        <p className="text-gray-500 text-sm">AI-powered health guidance</p>
+                    </div>
+                </Link>
+            </div>
+
+            {/* AI Symptom Checker Widget */}
+            <div className="mb-8">
+                <SymptomCheckerWidget />
             </div>
 
             {/* Recent Appointments */}

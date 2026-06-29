@@ -80,7 +80,7 @@ const DoctorDashboard = () => {
                 <StatCard icon={FaCalendarAlt} label="Total Appointments" value={stats?.total || 0} color="bg-blue-500" />
                 <StatCard icon={FaClock} label="Pending" value={stats?.pending || 0} color="bg-yellow-500" />
                 <StatCard icon={FaCheckCircle} label="Completed" value={stats?.completed || 0} color="bg-green-500" />
-                <StatCard icon={FaDollarSign} label="Total Earnings" value={`$${stats?.totalEarnings || 0}`} color="bg-purple-500" />
+                <StatCard icon={FaDollarSign} label="Total Earnings" value={`₹${(stats?.totalEarnings || 0).toLocaleString()}`} color="bg-purple-500" />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -140,7 +140,7 @@ const DoctorDashboard = () => {
                         </div>
                         <div className="flex justify-between">
                             <span className="text-gray-500">Consultation Fee</span>
-                            <span className="font-medium">${profile?.consultationFee}</span>
+                            <span className="font-medium">₹{profile?.consultationFee}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-gray-500">Experience</span>
