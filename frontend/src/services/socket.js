@@ -29,4 +29,5 @@ export const disconnectSocket = () => {
     }
 };
 
-export default { initSocket, getSocket, disconnectSocket };
+const socketService = { initSocket, getSocket, disconnectSocket };
+export default socketService;

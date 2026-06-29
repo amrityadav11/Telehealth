@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
 import Spinner from '../../components/common/Spinner';
 import StatusBadge from '../../components/common/StatusBadge';
-import StarRating from '../../components/common/StarRating';
 import { format } from 'date-fns';
 import { FaFileMedical, FaPills, FaCalendarAlt, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 

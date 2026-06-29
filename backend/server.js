@@ -31,6 +31,8 @@ const labTestRoutes = require('./routes/labTestRoutes');
 const healthVitalRoutes = require('./routes/healthVitalRoutes');
 const payoutRoutes = require('./routes/payoutRoutes');
 const familyRoutes = require('./routes/familyRoutes');
+const aiRoutes = require('./routes/aiRoutes');
+const articleRoutes = require('./routes/articleRoutes');
 
 // Connect to database
 connectDB();
@@ -45,7 +47,9 @@ const server = http.createServer(app);
 // Socket.io setup
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    origin: process.env.NODE_ENV === 'production'
+      ? allowedOrigins
+      : '*',
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -78,11 +82,22 @@ const authLimiter = rateLimit({
   message: { success: false, message: 'Too many login attempts, please try again later.' },
 });
 
-// CORS — allow all origins in development
+// CORS — allow all origins in development, whitelist in production
+const allowedOrigins = process.env.CLIENT_URL
+  ? process.env.CLIENT_URL.split(',').map((o) => o.trim())
+  : ['http://localhost:3000'];
+
 const corsOptions = {
   origin:
     process.env.NODE_ENV === 'production'
-      ? process.env.CLIENT_URL || 'http://localhost:3000'
+      ? (origin, callback) => {
+        // Allow requests with no origin (e.g. mobile apps, curl)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.some((allowed) => origin.startsWith(allowed))) {
+          return callback(null, true);
+        }
+        return callback(new Error(`CORS: origin ${origin} not allowed`));
+      }
       : true, // allow all in dev
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -130,6 +145,8 @@ app.use('/api/lab-tests', labTestRoutes);
 app.use('/api/health-vitals', healthVitalRoutes);
 app.use('/api/payouts', payoutRoutes);
 app.use('/api/family', familyRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/articles', articleRoutes);
 
 // Error handling
 app.use(notFound);

@@ -2,7 +2,6 @@ import React, { useEffect, useState, useCallback } from 'react';
 import api from '../../services/api';
 import Spinner from '../../components/common/Spinner';
 import toast from 'react-hot-toast';
-import { format } from 'date-fns';
 import {
     FaUsers, FaPlus, FaTimes, FaTrash, FaEdit,
     FaUserCircle, FaHeartbeat, FaCalendarAlt,

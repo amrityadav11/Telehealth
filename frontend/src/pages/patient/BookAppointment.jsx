@@ -7,8 +7,8 @@ import { PageSpinner } from '../../components/common/Spinner';
 import Spinner from '../../components/common/Spinner';
 import PaymentModal from '../../components/payment/PaymentModal';
 import AvailabilityCalendar from '../../components/doctors/AvailabilityCalendar';
-import { FaCalendarAlt, FaClock, FaDollarSign, FaVideo, FaCheckCircle, FaLock } from 'react-icons/fa';
-import { format, addDays } from 'date-fns';
+import { FaCalendarAlt, FaClock, FaRupeeSign, FaVideo, FaCheckCircle, FaLock } from 'react-icons/fa';
+import { format } from 'date-fns';
 
 const BookAppointment = () => {
     const { doctorId } = useParams();
@@ -35,12 +35,6 @@ const BookAppointment = () => {
             setSelectedSlot(null);
         }
     }, [selectedDate, doctorId, dispatch]);
-
-    // Generate next 14 days
-    const availableDates = Array.from({ length: 14 }, (_, i) => {
-        const date = addDays(new Date(), i + 1);
-        return format(date, 'yyyy-MM-dd');
-    });
 
     // Step 1 → Book appointment (creates it with payment pending) → open payment modal
     const handleBook = async () => {
@@ -103,7 +97,7 @@ const BookAppointment = () => {
                         <strong>{selectedSlot?.startTime}</strong>
                     </p>
                     <p className="text-green-600 font-semibold mb-6">
-                        Payment of ${consultationFee} received ✓
+                        Payment of ₹{consultationFee?.toLocaleString()} received ✓
                     </p>
                     <div className="flex gap-3">
                         <button
@@ -155,8 +149,8 @@ const BookAppointment = () => {
                                     <span>Video Consultation</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <FaDollarSign className="text-green-500" />
-                                    <span className="font-semibold text-gray-900">${consultationFee}</span>
+                                    <FaRupeeSign className="text-green-500" />
+                                    <span className="font-semibold text-gray-900">₹{consultationFee?.toLocaleString()}</span>
                                 </div>
                             </div>
 
@@ -256,7 +250,7 @@ const BookAppointment = () => {
                             {bookingLoading ? (
                                 <><Spinner size="sm" /> Booking...</>
                             ) : (
-                                <><FaLock /> Book & Pay — ${consultationFee}</>
+                                <><FaLock /> Book & Pay — ₹{consultationFee?.toLocaleString()}</>
                             )}
                         </button>
 
