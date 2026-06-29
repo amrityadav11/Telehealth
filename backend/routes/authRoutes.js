@@ -76,6 +76,8 @@ router.post('/resend-2fa', async (req, res) => {
 });
 
 // ── Google OAuth routes ───────────────────────────────────────────────────
+const FRONTEND_URL = process.env.CLIENT_URL || 'https://etelehealth.vercel.app';
+
 // Step 1: Redirect user to Google
 router.get(
     '/google',
@@ -85,11 +87,11 @@ router.get(
 // Step 2: Google redirects back here with a code
 router.get(
     '/google/callback',
-    passport.authenticate('google', { failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=google_failed`, session: false }),
+    passport.authenticate('google', { failureRedirect: `${FRONTEND_URL}/login?error=google_failed`, session: false }),
     (req, res) => {
         // Issue a JWT and redirect to the frontend callback page
         const token = req.user.getSignedJwtToken();
-        res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/auth/callback?token=${token}`);
+        res.redirect(`${FRONTEND_URL}/auth/callback?token=${token}`);
     }
 );
 
